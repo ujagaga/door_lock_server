@@ -1,0 +1,29 @@
+.box{
+    display: flex;
+    align-items:center;
+    justify-content:center;
+    margin: auto;
+    height: 90vh;
+}
+
+input{
+    width: 300px;
+    font-size: 20px;
+    border-width: 0 0 1px 0;
+    margin: 5px;
+    outline: none;
+    padding: 0;
+}
+
+button{
+    width: 300px;
+    font-size: 20px;
+    border: 1px solid black;
+    border-radius: 5px;
+    margin: 5px;
+    padding: 5px;
+}
+.red_notification{
+    color: red;
+}
+

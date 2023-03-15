@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLS Reklama</title>
+    <link rel="icon" type="image/x-icon" href="static/favicon.ico">
+    <link rel="stylesheet" href="static/index.css"/>
+</head>
+<body>
+    {% if forecast_data %}
+        <div id="video_container">
+            <video id="video_1" class="weather_video"
+                    muted
+                    playsinline
+                    autoplay
+                    preload="auto"
+                    onplay="setupVideoQueue('video_1', 'video_2')">
+                <source src="{{ url_for('static', filename='videos/' + forecast_data['icon'] + '.mp4' ) }}" type="video/mp4">
+            </video>
+            <video id="video_2" class="weather_video"
+                    muted
+                    playsinline
+                    preload="auto"
+                    onplay="setupVideoQueue('video_2', 'video_1')">
+                <source src="{{ url_for('static', filename='videos/' + forecast_data['icon'] + '.mp4' ) }}" type="video/mp4">
+            </video>
+        </div>
+
+        <div id="status_container">
+            <div class="transparent_back"></div>
+            <p class="large_1">{{ forecast_data.day }}</p>
+            <p class="large_1">{{ forecast_data.date }}</p>
+
+            {% for item in forecast_data.data %}
+            <div class="forcast">
+                <p class="time_mark">{{ item.start_hour }}:00 - {{ item.end_hour }}:00</p>
+                <p class="large_2">{{ item.start_temp }}<sup>&#8451;</sup> - {{ item.end_temp }}<sup>&#8451;</sup></p>
+                <p>{{ item.description }}</p>
+                <img src="{{ url_for('static', filename='icons/' + item.icon + '.png' ) }}"/>
+            </div>
+            {% endfor %}
+        </div>
+        <div id="info_container">
+            <p id="time_display"><span id="hours">00</span><span id="dots">:</span><span id="minutes">00</span></p>
+        </div>
+    {% else %}
+        <p>{{ error_message }}</p>
+    {% endif %}
+
+    {% if slideshow_files %}
+        {% for filename in slideshow_files %}
+            <div class="slideshow"><img src="{{ url_for('static', filename='images/' + filename) }}" alt="{{ filename }}"/></div>
+        {% endfor %}
+    {% endif %}
+</body>
+<script src="static/index.js"></script>
+</html>

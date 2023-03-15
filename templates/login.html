@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLS Reklama Login</title>
+    <link rel="icon" type="image/x-icon" href="static/favicon.ico">
+    <link rel="stylesheet" href="static/login.css"/>
+</head>
+<body>
+<div class="box">
+    <form method="POST" action="/login">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <p class="red_notification">
+                {{ messages[0] }}
+            </p>
+        {% endif %}
+        {% endwith %}
+        <div>
+            <div class="control">
+                <input type="user" name="user" placeholder="Vaše korisničko ime" autofocus="">
+            </div>
+        </div>
+
+        <div>
+            <div class="control">
+                <input type="password" name="password" placeholder="Vaša lozinka">
+            </div>
+        </div>
+        <button class="full-width">Login</button>
+    </form>
+</div>
+</body>
+</html>
