@@ -3,8 +3,8 @@
 import time
 
 from flask import Flask, g, render_template, request, flash, url_for, redirect, make_response, jsonify
-from flask_mqtt import Mqtt
 from werkzeug.utils import secure_filename
+from flask_mqtt import Mqtt
 import json
 import sys
 import requests
@@ -15,7 +15,9 @@ from datetime import datetime, timedelta
 import string
 import random
 from hashlib import sha256
-
+# import paho.mqtt.client as paho
+# from paho.mqtt.properties import Properties
+# from paho.mqtt.packettypes import PacketTypes
 
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -27,16 +29,20 @@ application = Flask(__name__, static_url_path='/static', static_folder='static')
 application.config['SECRET_KEY'] = '9OLWxND4o83j4K4iuopOqwer13door'
 application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 application.config['SESSION_COOKIE_NAME'] = 'door_locker'
-# application.config['MQTT_BROKER_URL'] = 'broker.emqx.io'
-# application.config['MQTT_BROKER_PORT'] = 1883
-# application.config['MQTT_USERNAME'] = ''  # Set this item when you need to verify username and password
-# application.config['MQTT_PASSWORD'] = ''  # Set this item when you need to verify username and password
-# application.config['MQTT_KEEPALIVE'] = 5  # Set KeepAlive time in seconds
-# application.config['MQTT_TLS_ENABLED'] = False  # If your server supports TLS, set it True
-mqtt_topic = '/lazeteleckog19/doorlock'
+
+application.config['MQTT_BROKER_URL'] = 'broker.emqx.io'
+application.config['MQTT_BROKER_PORT'] = 1883
+application.config['MQTT_USERNAME'] = ''  # Set this item when you need to verify username and password
+application.config['MQTT_PASSWORD'] = ''  # Set this item when you need to verify username and password
+application.config['MQTT_KEEPALIVE'] = 5  # Set KeepAlive time in seconds
+application.config['MQTT_TLS_ENABLED'] = False  # If your server supports TLS, set it T
+
+topic_file = os.path.join(current_path, "mqtt_topic.cfg")
 
 ROLE_ADMIN = "admin"
 ROLE_GUEST = "guest"
+
+mqtt_client = Mqtt(application)
 
 
 def init_database():
@@ -123,6 +129,22 @@ def hash_password(password: str):
     return sha256(password.encode('utf-8')).hexdigest()
 
 
+def mqtt_publish():
+    try:
+        file = open(topic_file, "r")
+        topic = file.readline()
+        file.close()
+
+        ret = mqtt_client.publish(topic, 'unlock')
+
+        if ret[0] != 0:
+            print(f"ERROR publishing to MQTT. Error code: {ret}!", flush=True)
+
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("ERROR publishing to MQTT on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
+
+
 @application.before_request
 def before_request():
     if not os.path.isfile(db_path):
@@ -156,7 +178,6 @@ def login():
 def login_post():
     username = request.form.get('username')
     password = request.form.get('password')
-    print("username:", username, "password", password)
 
     user = get_user(username=username)
 
@@ -203,4 +224,5 @@ def unlock():
     if not user:
         return redirect(url_for('login'))
 
+    mqtt_publish()
     return render_template('unlock.html')
