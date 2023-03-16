@@ -33,4 +33,6 @@ body{
     text-decoration: none;
     color: #BA4A00;
 }
-
+.red_notification{
+    color: red;
+}

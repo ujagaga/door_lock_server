@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LT19NS</title>
+    <title>LT19 NS</title>
     <link rel="icon" type="image/x-icon" href="static/favicon.ico">
     <link rel="stylesheet" href="static/index.css"/>
 </head>
@@ -11,6 +11,13 @@
     <div class="container">
         <h1>Laze Telečkog 19</h1>
 
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <p class="red_notification">
+                {{ messages[0] }}
+            </p>
+        {% endif %}
+        {% endwith %}
         <a href="/unlock" class="big_btn">Otključaj</a>
     </div>
 </body>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PLS Reklama Login</title>
+    <title>LT19 NS Login</title>
     <link rel="icon" type="image/x-icon" href="static/favicon.ico">
     <link rel="stylesheet" href="static/login.css"/>
 </head>
@@ -19,7 +19,7 @@
         {% endwith %}
         <div>
             <div class="control">
-                <input type="text" name="username" placeholder="Vaše korisničko ime" autofocus="">
+                <input type="text" name="email" placeholder="Vaša e-mail adresa" autofocus="">
             </div>
         </div>
 
@@ -28,6 +28,7 @@
                 <input type="password" name="password" placeholder="Vaša lozinka">
             </div>
         </div>
+        <a href="/reset_password">Zaboravljena lozinka? Resetujte je.</a>
         <button class="full-width">Login</button>
     </form>
 </div>

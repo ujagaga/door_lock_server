@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 import time
 
-from flask import Flask, g, render_template, request, flash, url_for, redirect, make_response, jsonify
-from werkzeug.utils import secure_filename
+from flask import Flask, g, render_template, request, flash, url_for, redirect, make_response, abort
 from flask_mqtt import Mqtt
+from flask_mail import Mail
+from mailbox import Message
+
 import json
 import sys
 import requests
@@ -15,15 +17,13 @@ from datetime import datetime, timedelta
 import string
 import random
 from hashlib import sha256
-# import paho.mqtt.client as paho
-# from paho.mqtt.properties import Properties
-# from paho.mqtt.packettypes import PacketTypes
+
 
 sys.path.insert(0, os.path.dirname(__file__))
 
 current_path = os.path.dirname(os.path.realpath(__file__))
 db_path = os.path.join(current_path, "database.db")
-# db_path = "database.db"
+
 application = Flask(__name__, static_url_path='/static', static_folder='static')
 
 application.config['SECRET_KEY'] = '9OLWxND4o83j4K4iuopOqwer13door'
@@ -37,12 +37,20 @@ application.config['MQTT_PASSWORD'] = ''  # Set this item when you need to verif
 application.config['MQTT_KEEPALIVE'] = 5  # Set KeepAlive time in seconds
 application.config['MQTT_TLS_ENABLED'] = False  # If your server supports TLS, set it T
 
+application.config['MAIL_SERVER'] = "smtp.gmail.com"
+application.config['MAIL_PORT'] = 465
+application.config['MAIL_USERNAME'] = "your_mail@gmail.com"
+application.config["MAIL_PASSWORD"] = "your_email_password"
+application.config["MAIL_USE_TLS"] = False
+application.config["MAIL_USE_SSL"] = True
+
 topic_file = os.path.join(current_path, "mqtt_topic.cfg")
 
 ROLE_ADMIN = "admin"
 ROLE_GUEST = "guest"
 
 mqtt_client = Mqtt(application)
+mail = Mail(application)
 
 
 def init_database():
@@ -50,8 +58,7 @@ def init_database():
         # Database does not exist. Create one
         db = sqlite3.connect(db_path)
 
-        sql = "create table users (username TEXT, email TEXT, password TEXT, token TEXT, role TEXT, " \
-              "valid_until INTEGER)"
+        sql = "create table users (email TEXT, password TEXT, token TEXT, role TEXT, valid_until INTEGER)"
         db.execute(sql)
         db.commit()
         db.close()
@@ -70,13 +77,11 @@ def exec_db(query):
         g.db.commit()
 
 
-def get_user(username: str = None, token: str = None, email: str = None):
-    if username:
-        sql = f"SELECT * FROM users WHERE username = '{username}'"
+def get_user(email: str = None, token: str = None):
+    if email:
+        sql = f"SELECT * FROM users WHERE email = '{email}'"
     elif token:
         sql = f"SELECT * FROM users WHERE token = '{token}'"
-    elif email:
-        sql = f"SELECT * FROM users WHERE email = '{email}'"
     else:
         return None
 
@@ -90,29 +95,25 @@ def get_user(username: str = None, token: str = None, email: str = None):
     return user
 
 
-def update_user(username: str, token: str = None, email: str = None, password: str = None, role: str = None, valid_until: int = -1):
-    user = get_user(username=username)
+def update_user(email: str, token: str = None, password: str = None, role: str = None, valid_until: int = -1):
+    user = get_user(email=email)
 
     print("Reading user: ", user)
     if user:
         if token:
             user["token"] = token
-        if email:
-            user["email"] = email
         if password:
             user["password"] = password
         if role:
             user["role"] = role
         if valid_until:
             user["valid_until"] = valid_until
-        print("Reading user modified: ", user)
 
-        sql = "UPDATE users SET token = '{}', email = '{}', password = '{}', role = '{}', valid_until = '{}' " \
-              "WHERE username = '{}'".format(user["token"], user["email"], user["password"],
-                                             user["role"], user["valid_until"], username)
+        sql = "UPDATE users SET token = '{}', password = '{}', role = '{}', valid_until = '{}' WHERE email = '{}'" \
+              "".format(user["token"], user["password"], user["role"], user["valid_until"], email)
     else:
-        sql = f"INSERT INTO users (username, password, role, email, valid_until) " \
-              f"VALUES ('{username}', '{password}', '{role}', '{email}', '{valid_until}')"
+        sql = f"INSERT INTO users (email, password, role, valid_until) " \
+              f"VALUES ('{email}', '{password}', '{role}', '{valid_until}')"
 
     try:
         exec_db(sql)
@@ -176,13 +177,13 @@ def login():
 
 @application.route('/login', methods=['POST'])
 def login_post():
-    username = request.form.get('username')
+    email = request.form.get('email')
     password = request.form.get('password')
 
-    user = get_user(username=username)
+    user = get_user(email=email)
 
     if not user:
-        flash('Neispravno korisničko ime ili lozinka.')
+        flash('Neispravna e-mail adresa ili lozinka.')
         return redirect(url_for('login'))
 
     encrypted_pass = hash_password(password)
@@ -191,7 +192,7 @@ def login_post():
         return redirect(url_for('login'))
 
     token = generate_token()
-    update_user(username=username, token=token)
+    update_user(email=email, token=token)
 
     response = make_response(redirect(url_for('index')))
     response.set_cookie('token', token)
@@ -226,3 +227,62 @@ def unlock():
 
     mqtt_publish()
     return render_template('unlock.html')
+
+
+@application.route('/reset_password', methods=['GET'])
+def reset_password():
+    return render_template('reset_password.html')
+
+
+@application.route('/reset_password', methods=['POST'])
+def reset_password_post():
+    email = request.form.get('email')
+    user = get_user(email=email)
+
+    flash('Ako je priložena e-mail adresa u našoj bazi, poslaćemo Vam e-mail sa linkom za reset.')
+    if user:
+        token = generate_token()
+        update_user(email=email, token=token)
+
+        reset_link = f"{url_for('set_password')}?token={token}"
+
+        mail_message = Message('Reset lozinke portala za otključavanje vrata', sender='do_not_reply@lazeteleckog19.com', recipients=[email])
+        mail_message.html = "<p>Da biste resetovali lozinku za pristup portalu za otključavanje vrata " \
+                            "u Laze Telečkog 19, kliknite <a href='{}'>ovde</a>.</p>".format(reset_link)
+        mail.send(mail_message)
+
+    return redirect(url_for('index'))
+
+
+@application.route('/set_password', methods=['GET'])
+def set_password():
+    args = request.args
+    token = args.get("token")
+
+    user = get_user(token=token)
+    if not user:
+        abort(404)
+
+    return render_template('set_password.html', token=token)
+
+
+@application.route('/set_password', methods=['POST'])
+def set_password_post():
+    password_1 = request.form.get('password_1')
+    password_2 = request.form.get('password_2')
+    token = request.form.get('token')
+    user = get_user(token=token)
+
+    if not user:
+        flash("Greška: neispravan token ili je link istekao!")
+        return redirect(url_for('index'))
+
+    if password_1 != password_2:
+        flash("Greška: lozinke nisu iste!")
+        return redirect(url_for('set_password', token=token))
+
+    hashed_password = hash_password(password_1)
+    update_user(email=user["email"], password=hashed_password)
+
+    flash("Lozinka je uspešno promenjena. Sada možete da se logujete sa njom.")
+    return redirect(url_for('login'))

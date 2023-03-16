@@ -4,7 +4,7 @@ This server is intended for controlling a WiFi enabled door lock at a guesthouse
 Besides a web UI, there is a websocket server so WiFi enabled embedded devices can connect and receive commands.
 
 ## Installing dependencies
-	pip install flask flask-sqlalchemy requests paho-mqtt
+	pip install flask flask-sqlalchemy requests flask_mqtt flask_mail
 
 ## Preparing
 Before you run the app, you should create an admin user:

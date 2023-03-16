@@ -15,7 +15,7 @@ ROLE_ADMIN = "admin"
 ROLE_GUEST = "guest"
 
 
-def hash_password(plain_text_password):
+def hash_password(plain_text_password: str) -> str:
     return sha256(plain_text_password.encode('utf-8')).hexdigest()
 
 
@@ -24,8 +24,7 @@ def init_database():
         # Database does not exist. Create one
         db = sqlite3.connect(database_file)
 
-        sql = "create table users (username TEXT, email TEXT, password TEXT, token TEXT, role TEXT, " \
-              "valid_until INTEGER)"
+        sql = "create table users (email TEXT, password TEXT, token TEXT, role TEXT, valid_until INTEGER)"
         db.execute(sql)
         db.commit()
         db.close()
@@ -34,11 +33,11 @@ def init_database():
             sys.exit("ERROR: Failed to create the database")
 
 
-def get_user_from_db(username: str = None):
+def get_user_from_db(email: str = None) -> dict:
     data = None
 
-    if username:
-        sql = f"SELECT * FROM users WHERE username = '{username}'"
+    if email:
+        sql = f"SELECT * FROM users WHERE email = '{email}'"
     else:
         sql = "SELECT * FROM users"
 
@@ -57,42 +56,39 @@ def get_user_from_db(username: str = None):
     return data
 
 
-def delete_user(username):
+def delete_user(email: str):
     con = sqlite3.connect(database_file)
     cur = con.cursor()
-    cur.execute(f"DELETE FROM users WHERE username = '{username}'")
+    cur.execute(f"DELETE FROM users WHERE username = '{email}'")
     con.commit()
     con.close()
 
 
-def write_new_user(username, password, email, role=ROLE_GUEST, valid_until=-1):
+def write_new_user(password: str, email: str, role: str = ROLE_ADMIN, valid_until: int = -1):
     con = sqlite3.connect(database_file)
     cur = con.cursor()
     cur.execute(
-        "INSERT INTO users(username, password, email, token, role, valid_until) VALUES (?, ?, ?, ?, ?, ?)",
-        (username, hash_password(password), email, "", role, valid_until)
+        "INSERT INTO users(password, email, token, role, valid_until) VALUES (?, ?, ?, ?, ?)",
+        (hash_password(password), email, "", role, valid_until)
     )
     con.commit()
     con.close()
 
 
-def modify_user(username: str, email: str = None, password: str = None, role: str = None):
-    user = get_user_from_db(username=username)
+def modify_user(email: str, password: str = None, role: str = None):
+    user = get_user_from_db(email=email)
 
     if not user:
         print('ERROR: No user found in dbd matching username: "{username}"')
-        return False
+        return
 
-    if email:
-        user["email"] = email
     if password:
         user["password"] = hash_password(password)
     if role:
         user["role"] = role
 
-    sql = "UPDATE users SET email = '{}', password = '{}', role = '{}', WHERE username = '{}'".format(user["email"],
-                                                                                                      user["password"],
-                                                                                                      user["role"])
+    sql = "UPDATE users SET password = '{}', role = '{}', WHERE email = '{}'" \
+          "".format(user["password"], user["role"], user["email"])
 
     con = sqlite3.connect(database_file)
     cur = con.cursor()
@@ -100,23 +96,22 @@ def modify_user(username: str, email: str = None, password: str = None, role: st
     con.commit()
     con.close()
 
-    return True
 
+def list_users(email: str = None):
+    users = get_user_from_db(email=email)
 
-def list_users(username=None):
-    users = get_user_from_db(username=args.username)
     if len(users) == 0:
         message = "INFO: No users found in database"
-        if username is not None:
-            message += f" with username: {username}."
+        if email is not None:
+            message += f" with email: {email}."
         else:
             message += "."
 
         print(message)
     else:
         message = "INFO: Listing users in database"
-        if username is not None:
-            message += f" with username: {username}"
+        if email is not None:
+            message += f" with email: {email}"
         message += ":"
 
         print(message)
@@ -124,14 +119,14 @@ def list_users(username=None):
             print("\t", user)
 
 
-def validate_email(email):
+def validate_email(email: str):
     # Check if e-mail is valid
     regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
     if not re.fullmatch(regex, args.email):
         sys.exit(f"ERROR: Invalid e-mail: {email}")
 
 
-def validate_password(password):
+def validate_password(password: str):
     if " " in args.password:
         sys.exit("ERROR: Password can not contain spaces.")
     if len(args.password) < 5:
@@ -140,7 +135,6 @@ def validate_password(password):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-u", "--username", help="Username", required=False)
     parser.add_argument("-p", "--password", help="Password", required=False)
     parser.add_argument("-e", "--email", help="E-mail", required=False)
     parser.add_argument("-r", "--role", help="Access role", required=False, choices=[ROLE_ADMIN, ROLE_GUEST])
@@ -156,11 +150,11 @@ if __name__ == '__main__':
         list_users()
 
     elif args.operation == 'add':
-        if not args.password or not args.email or not args.username:
-            sys.exit("ERROR: Please provide all parameters to create a new user (username, password and email)")
+        if not args.password or not args.email:
+            sys.exit("ERROR: Please provide all parameters to create a new user (password and email)")
 
         # Check if user with same username exists
-        users = get_user_from_db(username=args.username)
+        users = get_user_from_db(email=args.email)
         if len(users) > 0:
             sys.exit(f"ERROR: User exists: {users[0]}")
 
@@ -169,38 +163,37 @@ if __name__ == '__main__':
         validate_password(args.password)
 
         print(
-            f"INFO: Creating a new username: "
-            f"\n\tusername: {args.username}"
-            f"\n\tpassword: {args.password}"
+            f"INFO: Creating a new user: "
             f"\n\temail:    {args.email}"
+            f"\n\tpassword: {args.password}"            
             f"\n\trole:    {args.role}"
             )
-        write_new_user(username=args.username, email=args.email, password=args.password, role=args.role)
-        list_users(username=args.username)
+        write_new_user(email=args.email, password=args.password, role=args.role)
+        list_users(email=args.email)
 
     elif args.operation == 'delete':
-        if not args.username:
-            sys.exit("ERROR: Please provide username of the user to delete.")
+        if not args.email:
+            sys.exit("ERROR: Please provide email of the user to delete.")
 
-        users = get_user_from_db(username=args.username)
+        users = get_user_from_db(email=args.email)
         if len(users) > 0:
-            print(f"INFO: Deleting user with username: {args.username}")
-            delete_user(args.username)
-        list_users(username=args.username)
+            print(f"INFO: Deleting user with email: {args.email}")
+            delete_user(args.email)
+        list_users(email=args.email)
 
     elif args.operation == 'modify':
-        if not args.username:
-            sys.exit("ERROR: Please provide username of the user to modify.")
+        if not args.email:
+            sys.exit("ERROR: Please provide email of the user to modify.")
 
-        if not args.password and not args.email and not args.role:
-            sys.exit("ERROR: Please provide password, e-mail and/or role to modify.")
+        if not args.password and not args.role:
+            sys.exit("ERROR: Please provide password, and/or role to modify.")
 
         if args.password:
             validate_password(args.password)
         elif args.email:
             validate_email(args.email)
 
-        print(f"INFO: Modifying user: {args.username}")
-        modify_user(username=args.username, password=args.password, email=args.email, role=args.role)
+        print(f"INFO: Modifying user: {args.email}")
+        modify_user(email=args.email, password=args.password, role=args.role)
 
-        list_users(username=args.username)
+        list_users(email=args.email)
