@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 import time
 
-from flask import Flask, g, render_template, request, flash, url_for, redirect, make_response
+from flask import Flask, g, render_template, request, flash, url_for, redirect, make_response, jsonify
+from flask_mqtt import Mqtt
 from werkzeug.utils import secure_filename
 import json
 import sys
@@ -18,12 +19,21 @@ from hashlib import sha256
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-db_path = "database.db"
+current_path = os.path.dirname(os.path.realpath(__file__))
+db_path = os.path.join(current_path, "database.db")
+# db_path = "database.db"
 application = Flask(__name__, static_url_path='/static', static_folder='static')
 
 application.config['SECRET_KEY'] = '9OLWxND4o83j4K4iuopOqwer13door'
 application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 application.config['SESSION_COOKIE_NAME'] = 'door_locker'
+# application.config['MQTT_BROKER_URL'] = 'broker.emqx.io'
+# application.config['MQTT_BROKER_PORT'] = 1883
+# application.config['MQTT_USERNAME'] = ''  # Set this item when you need to verify username and password
+# application.config['MQTT_PASSWORD'] = ''  # Set this item when you need to verify username and password
+# application.config['MQTT_KEEPALIVE'] = 5  # Set KeepAlive time in seconds
+# application.config['MQTT_TLS_ENABLED'] = False  # If your server supports TLS, set it True
+mqtt_topic = '/lazeteleckog19/doorlock'
 
 ROLE_ADMIN = "admin"
 ROLE_GUEST = "guest"
@@ -38,7 +48,6 @@ def init_database():
               "valid_until INTEGER)"
         db.execute(sql)
         db.commit()
-
         db.close()
 
 
@@ -56,8 +65,6 @@ def exec_db(query):
 
 
 def get_user(username: str = None, token: str = None, email: str = None):
-    data = None
-
     if username:
         sql = f"SELECT * FROM users WHERE username = '{username}'"
     elif token:
@@ -72,6 +79,7 @@ def get_user(username: str = None, token: str = None, email: str = None):
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print(f"ERROR reading data on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
+        user = None
 
     return user
 
@@ -79,6 +87,7 @@ def get_user(username: str = None, token: str = None, email: str = None):
 def update_user(username: str, token: str = None, email: str = None, password: str = None, role: str = None, valid_until: int = -1):
     user = get_user(username=username)
 
+    print("Reading user: ", user)
     if user:
         if token:
             user["token"] = token
@@ -90,9 +99,11 @@ def update_user(username: str, token: str = None, email: str = None, password: s
             user["role"] = role
         if valid_until:
             user["valid_until"] = valid_until
+        print("Reading user modified: ", user)
 
-        sql = f"UPDATE users SET token = '{token}', email = '{email}', password = '{password}', role = '{role}', " \
-              f"valid_until = '{valid_until}' WHERE username = '{username}'"
+        sql = "UPDATE users SET token = '{}', email = '{}', password = '{}', role = '{}', valid_until = '{}' " \
+              "WHERE username = '{}'".format(user["token"], user["email"], user["password"],
+                                             user["role"], user["valid_until"], username)
     else:
         sql = f"INSERT INTO users (username, password, role, email, valid_until) " \
               f"VALUES ('{username}', '{password}', '{role}', '{email}', '{valid_until}')"
@@ -108,7 +119,7 @@ def generate_token():
     return ''.join(random.choices(string.ascii_letters, k=32))
 
 
-def encrypt_password(password: str):
+def hash_password(password: str):
     return sha256(password.encode('utf-8')).hexdigest()
 
 
@@ -145,6 +156,7 @@ def login():
 def login_post():
     username = request.form.get('username')
     password = request.form.get('password')
+    print("username:", username, "password", password)
 
     user = get_user(username=username)
 
@@ -152,7 +164,7 @@ def login_post():
         flash('Neispravno korisničko ime ili lozinka.')
         return redirect(url_for('login'))
 
-    encrypted_pass = encrypt_password(password)
+    encrypted_pass = hash_password(password)
     if encrypted_pass != user["password"]:
         flash('Neispravno korisničko ime ili lozinka.')
         return redirect(url_for('login'))
@@ -160,7 +172,7 @@ def login_post():
     token = generate_token()
     update_user(username=username, token=token)
 
-    response = make_response(redirect(url_for('admin')))
+    response = make_response(redirect(url_for('index')))
     response.set_cookie('token', token)
     return response
 
@@ -192,5 +204,3 @@ def unlock():
         return redirect(url_for('login'))
 
     return render_template('unlock.html')
-
-

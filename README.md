@@ -9,7 +9,7 @@ Besides a web UI, there is a websocket server so WiFi enabled embedded devices c
 ## Run locally
 
     export FLASK_APP=passenger_wsgi.py
-    export FLASK_ENV=development
+    export FLASK_DEBUG=development
     flask run
     
 ## Change history
