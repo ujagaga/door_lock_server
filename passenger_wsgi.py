@@ -2,11 +2,9 @@
 # -*- coding: utf-8 -*-
 import time
 
-from flask import Flask, g, render_template, request, flash, url_for, redirect, make_response, abort
+from flask import Flask, g, render_template, request, flash, url_for, redirect, make_response, abort, jsonify
 from flask_mqtt import Mqtt
-from flask_mail import Mail
-from mailbox import Message
-
+from flask_mail import Message, Mail
 import json
 import sys
 import requests
@@ -17,6 +15,7 @@ from datetime import datetime, timedelta
 import string
 import random
 from hashlib import sha256
+import settings
 
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -39,8 +38,8 @@ application.config['MQTT_TLS_ENABLED'] = False  # If your server supports TLS, s
 
 application.config['MAIL_SERVER'] = "smtp.gmail.com"
 application.config['MAIL_PORT'] = 465
-application.config['MAIL_USERNAME'] = "your_mail@gmail.com"
-application.config["MAIL_PASSWORD"] = "your_email_password"
+application.config['MAIL_USERNAME'] = settings.MAIL_USERNAME
+application.config["MAIL_PASSWORD"] = settings.MAIL_PASSWORD
 application.config["MAIL_USE_TLS"] = False
 application.config["MAIL_USE_SSL"] = True
 
@@ -61,6 +60,11 @@ def init_database():
         sql = "create table users (email TEXT, password TEXT, token TEXT, role TEXT, valid_until INTEGER)"
         db.execute(sql)
         db.commit()
+
+        sql = "create table devices (name TEXT, password TEXT, data TEXT, token TEXT)"
+        db.execute(sql)
+        db.commit()
+
         db.close()
 
 
@@ -98,9 +102,8 @@ def get_user(email: str = None, token: str = None):
 def update_user(email: str, token: str = None, password: str = None, role: str = None, valid_until: int = -1):
     user = get_user(email=email)
 
-    print("Reading user: ", user)
     if user:
-        if token:
+        if token is not None:
             user["token"] = token
         if password:
             user["password"] = password
@@ -111,15 +114,49 @@ def update_user(email: str, token: str = None, password: str = None, role: str =
 
         sql = "UPDATE users SET token = '{}', password = '{}', role = '{}', valid_until = '{}' WHERE email = '{}'" \
               "".format(user["token"], user["password"], user["role"], user["valid_until"], email)
+
+        try:
+            exec_db(sql)
+        except Exception as exc:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            print("ERROR writing user to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
+
+
+def get_device(name: str = None, token: str = None, one=True):
+    if name:
+        sql = f"SELECT * FROM devices WHERE name = '{name}'"
+    elif token:
+        sql = f"SELECT * FROM devices WHERE token = '{token}'"
     else:
-        sql = f"INSERT INTO users (email, password, role, valid_until) " \
-              f"VALUES ('{email}', '{password}', '{role}', '{valid_until}')"
+        sql = f"SELECT * FROM devices"
 
     try:
-        exec_db(sql)
+        device = query_db(g.db, sql, one=one)
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR writing user to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
+        print(f"ERROR reading data on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
+        device = None
+
+    return device
+
+
+def update_device(name: str, token: str = None, data: str = None):
+    device = get_device(name=name)
+
+    if device:
+        if token is not None:
+            device["token"] = token
+        if data:
+            device["data"] = data
+
+        sql = "UPDATE devices SET token = '{}', data = '{}' WHERE name = '{}'" \
+              "".format(device["token"], device["data"], name)
+
+        try:
+            exec_db(sql)
+        except Exception as exc:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            print("ERROR writing user to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
 
 
 def generate_token():
@@ -130,13 +167,13 @@ def hash_password(password: str):
     return sha256(password.encode('utf-8')).hexdigest()
 
 
-def mqtt_publish():
-    try:
-        file = open(topic_file, "r")
-        topic = file.readline()
-        file.close()
+def generate_random_string():
+    return hash_password(generate_token())
 
-        ret = mqtt_client.publish(topic, 'unlock')
+
+def mqtt_publish(topic: str, data: str):
+    try:
+        ret = mqtt_client.publish(topic, data)
 
         if ret[0] != 0:
             print(f"ERROR publishing to MQTT. Error code: {ret}!", flush=True)
@@ -165,7 +202,7 @@ def logout():
     token = request.cookies.get('token')
     user = get_user(token=token)
     if user:
-        update_user(username=user["username"], token="")
+        update_user(email=user["email"], token="")
 
     return redirect(url_for('index'))
 
@@ -199,6 +236,65 @@ def login_post():
     return response
 
 
+@application.route('/device_login', methods=['GET'])
+def device_login():
+    args = request.args
+    name = args.get("name")
+    password = args.get("password")
+
+    if name and password:
+        device = get_device(name=name)
+
+        if device:
+            encrypted_pass = hash_password(password)
+            if encrypted_pass != device["password"]:
+                response = {"status": "ERROR", "detail": "Bad password or name"}
+            else:
+                token = generate_token()
+                topic = generate_random_string()
+                life_sign = generate_random_string()
+                trigger = generate_random_string()
+
+                device_data = json.dumps({"lifesign": life_sign, "trigger": trigger, "topic": topic})
+
+                update_device(name=name, token=token, data=device_data)
+
+                response = {"status": "OK", "token": token, "lifesign": life_sign, "trigger": trigger, "topic": topic}
+        else:
+            response = {"status": "ERROR", "detail": "Bad password or name"}
+    else:
+        response = {"status": "ERROR", "detail": "Missing password or name"}
+
+    return jsonify(response)
+
+
+@application.route('/device_ping', methods=['GET'])
+def device_ping():
+    args = request.args
+    token = args.get("token")
+
+    if token:
+        device = get_device(token=token)
+        if device:
+            devices = get_device(one=False)
+
+            if devices:
+                for device in devices:
+                    device_data = json.loads(device["data"])
+                    topic = device_data["topic"]
+                    lifesign = device_data["lifesign"]
+
+                    mqtt_publish(topic=topic, data=lifesign)
+
+            response = {"status": "OK"}
+        else:
+            response = {"status": "ERROR", "detail": "Unauthorized"}
+    else:
+        response = {"status": "ERROR", "detail": "Missing token"}
+
+    return jsonify(response)
+
+
 @application.route('/', methods=['GET'])
 def index():
     token = request.cookies.get('token')
@@ -225,7 +321,15 @@ def unlock():
     if not user:
         return redirect(url_for('login'))
 
-    mqtt_publish()
+    devices = get_device(one=False)
+    if devices:
+        for device in devices:
+            device_data = json.loads(device["data"])
+            topic = device_data["topic"]
+            trigger = device_data["trigger"]
+
+            mqtt_publish(topic=topic, data=trigger)
+
     return render_template('unlock.html')
 
 
@@ -244,9 +348,12 @@ def reset_password_post():
         token = generate_token()
         update_user(email=email, token=token)
 
-        reset_link = f"{url_for('set_password')}?token={token}"
+        base_url = request.base_url.replace("reset_password", "set_password")
 
-        mail_message = Message('Reset lozinke portala za otključavanje vrata', sender='do_not_reply@lazeteleckog19.com', recipients=[email])
+        reset_link = f"{base_url}?token={token}"
+
+        mail_message = Message('Reset lozinke portala za otključavanje vrata', sender="do_not_reply@door_lock.lt19",
+                               recipients=[email])
         mail_message.html = "<p>Da biste resetovali lozinku za pristup portalu za otključavanje vrata " \
                             "u Laze Telečkog 19, kliknite <a href='{}'>ovde</a>.</p>".format(reset_link)
         mail.send(mail_message)

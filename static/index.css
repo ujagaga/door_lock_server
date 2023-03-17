@@ -15,7 +15,7 @@ body{
 .container{
     position: relative;
     margin: 0 auto;
-    padding: 0 5px;
+    padding: 20px 5px;
     text-align: center;
     max-width: 600px;
 }
@@ -27,6 +27,15 @@ body{
     padding: 5px;
     border-radius: 5px;
     text-decoration: none;
+}
+.nav_btn{
+    color: white;
+    background-color: orange;
+    display: inline-block;
+    padding: 5px;
+    border-radius: 5px;
+    text-decoration: none;
+    float: left;
 }
 
 .title_link{

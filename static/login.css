@@ -25,5 +25,12 @@ button{
 }
 .red_notification{
     color: red;
+    max-width: 300px;
+    overflow-wrap: break-word;
 }
 
+.standalone_link{
+    display: block;
+    margin: 10px auto;
+    text-align: center;
+}

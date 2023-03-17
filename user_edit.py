@@ -27,6 +27,11 @@ def init_database():
         sql = "create table users (email TEXT, password TEXT, token TEXT, role TEXT, valid_until INTEGER)"
         db.execute(sql)
         db.commit()
+
+        sql = "create table devices (name TEXT, password TEXT, data TEXT, token TEXT)"
+        db.execute(sql)
+        db.commit()
+
         db.close()
 
         if not os.path.isfile(database_file):
@@ -59,12 +64,12 @@ def get_user_from_db(email: str = None) -> dict:
 def delete_user(email: str):
     con = sqlite3.connect(database_file)
     cur = con.cursor()
-    cur.execute(f"DELETE FROM users WHERE username = '{email}'")
+    cur.execute(f"DELETE FROM users WHERE email = '{email}'")
     con.commit()
     con.close()
 
 
-def write_new_user(password: str, email: str, role: str = ROLE_ADMIN, valid_until: int = -1):
+def write_new_user(password: str, email: str, role: str, valid_until: int = -1):
     con = sqlite3.connect(database_file)
     cur = con.cursor()
     cur.execute(
@@ -79,7 +84,7 @@ def modify_user(email: str, password: str = None, role: str = None):
     user = get_user_from_db(email=email)
 
     if not user:
-        print('ERROR: No user found in dbd matching username: "{username}"')
+        print('ERROR: No user found in db matching username: "{username}"')
         return
 
     if password:
@@ -137,7 +142,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--password", help="Password", required=False)
     parser.add_argument("-e", "--email", help="E-mail", required=False)
-    parser.add_argument("-r", "--role", help="Access role", required=False, choices=[ROLE_ADMIN, ROLE_GUEST])
+    parser.add_argument("-r", "--role", help="Access role", required=False, choices=[ROLE_ADMIN, ROLE_GUEST], default=ROLE_ADMIN)
     parser.add_argument("-o", "--operation", help="Operation", required=True,
                         choices=['add', 'delete', 'modify', 'list'])
 
