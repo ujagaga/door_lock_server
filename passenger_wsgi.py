@@ -90,12 +90,12 @@ def login_post():
     user = database.get_user(db=g.db, email=email)
 
     if not user:
-        flash('Neispravna e-mail adresa ili lozinka.')
+        flash('Invalid e-mail or password')
         return redirect(url_for('login'))
 
     encrypted_pass = helper.hash_password(password)
     if encrypted_pass != user["password"]:
-        flash('Neispravno korisničko ime ili lozinka.')
+        flash('Invalid e-mail or password.')
         return redirect(url_for('login'))
 
     token = helper.generate_token()
@@ -118,7 +118,7 @@ def device_login():
         if device:
             encrypted_pass = helper.hash_password(password)
             if encrypted_pass != device["password"]:
-                response = {"status": "ERROR", "detail": "Bad password or name"}
+                response = {"status": "ERROR", "detail": "Invalid name or password"}
             else:
                 token = helper.generate_token()
                 topic = helper.generate_random_string()
@@ -131,7 +131,7 @@ def device_login():
 
                 response = {"status": "OK", "token": token, "lifesign": life_sign, "trigger": trigger, "topic": topic}
         else:
-            response = {"status": "ERROR", "detail": "Bad password or name"}
+            response = {"status": "ERROR", "detail": "Invalid name or password"}
     else:
         response = {"status": "ERROR", "detail": "Missing password or name"}
 
@@ -234,7 +234,7 @@ def reset_password_post():
     email = request.form.get('email')
     user = database.get_user(db=g.db, email=email)
 
-    flash('Ako je priložena e-mail adresa u našoj bazi, poslaćemo Vam e-mail sa linkom za reset.')
+    flash('If the provided e-mail address is in our database, we will send you a reset link.')
     if user:
         token = helper.generate_token()
         database.update_user(db=g.db, email=email, token=token)
@@ -243,10 +243,9 @@ def reset_password_post():
 
         reset_link = f"{base_url}?token={token}"
 
-        mail_message = Message('Reset lozinke portala za otključavanje vrata', sender="do_not_reply@door_lock.lt19",
+        mail_message = Message('Reset unlock portal password.', sender="do_not_reply@door.lock",
                                recipients=[email])
-        mail_message.html = "<p>Da biste resetovali lozinku za pristup portalu za otključavanje vrata " \
-                            "u Laze Telečkog 19, kliknite <a href='{}'>ovde</a>.</p>".format(reset_link)
+        mail_message.html = "<p>To reset your password, klick the following <a href='{}'>link</a>.</p>".format(reset_link)
         mail.send(mail_message)
 
     return redirect(url_for('index'))
@@ -272,11 +271,11 @@ def set_password_post():
     user = database.get_user(db=g.db, token=token)
 
     if not user:
-        flash("Greška: neispravan token ili je link istekao!")
+        flash("Error: Invalid token or expired link!")
         return redirect(url_for('index'))
 
     if password_1 != password_2:
-        flash("Greška: lozinke nisu iste!")
+        flash("Error: Passwords are not the same!")
         return redirect(url_for('set_password', token=token))
 
     ret_val = helper.validate_password(password_1)
@@ -285,13 +284,13 @@ def set_password_post():
         hashed_password = helper.hash_password(password_1)
         database.update_user(db=g.db, email=user["email"], password=hashed_password)
 
-        flash("Lozinka je uspešno promenjena. Sada možete da se logujete sa njom.")
+        flash("Your password was changed successfully. You may now use it to login.")
         return redirect(url_for('login'))
     else:
         if ret_val == 0:
-            flash("Greška: Lozinka ne može da sadrži prazna mesta!")
+            flash("Error: Password can not contain empty spaces!")
         else:
-            flash("Greška: lozinke ne može da bude kraća od 5 karaktera!")
+            flash("Error: Password can not be shorter than 5 characters!")
         return redirect(url_for('set_password', token=token))
 
 

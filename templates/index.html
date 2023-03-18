@@ -9,8 +9,8 @@
 </head>
 <body>
     <div class="container">
-        <a href="/logout" class="nav_btn">Odjavi se</a>
-        <h1>Laze Telečkog 19</h1>
+        <a href="/logout" class="nav_btn">Logout</a>
+        <h1>My address</h1>
 
         {% with messages = get_flashed_messages() %}
         {% if messages %}
@@ -19,11 +19,11 @@
             </p>
         {% endif %}
         {% endwith %}
-        <a href="/unlock" class="big_btn">Otključaj</a>
+        <a href="/unlock" class="big_btn">Unlock</a>
 
         <form class="inner_container" method="POST" action="/get_temporary_unlock_link">
-            <button class="small_btn">Generiši privremeni link</button>
-            <label for="valid_until">Važi do:</label>
+            <button class="small_btn">Generate temporary link</button>
+            <label for="valid_until">Valid until:</label>
             <input type="date" id="valid_until" name="valid_until"
                    value="{{ end_date }}"
                    min="{{ start_date }}">
@@ -31,7 +31,7 @@
 
         <div class="inner_container">
             {% if guest_links %}
-            <h2>Lista privremenih linkova</h2>
+            <h2>List of temporary links</h2>
             <table>
                 <thead>
                     <td>
