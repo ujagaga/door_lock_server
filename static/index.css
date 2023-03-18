@@ -3,7 +3,7 @@ body{
     margin: 0;
 }
 
-.clearfix::after {
+.clearfix::after, .clearfix::before {
   content: "";
   clear: both;
   display: table;
@@ -27,6 +27,7 @@ body{
     padding: 5px;
     border-radius: 5px;
     text-decoration: none;
+    margin: 5px;
 }
 .nav_btn{
     color: white;
@@ -36,6 +37,30 @@ body{
     border-radius: 5px;
     text-decoration: none;
     float: left;
+    margin: 5px;
+}
+
+.small_btn{
+    color: white;
+    background-color: orange;
+    display: inline-block;
+    padding: 5px;
+    border-radius: 5px;
+    text-decoration: none;
+    margin: 5px;
+}
+
+.small_red_btn{
+    color: white;
+    background-color: red;
+    display: inline-block;
+    padding: 5px;
+    border-radius: 50%;
+    text-decoration: none;
+    float: left;
+    margin: 5px;
+    width: 1em;
+    height: 1em;
 }
 
 .title_link{
@@ -44,4 +69,13 @@ body{
 }
 .red_notification{
     color: red;
+}
+table{
+    width: 100%;
+}
+
+.inner_container{
+    width: 100%;
+    padding: 0;
+    margin: 20px 0;
 }

@@ -175,32 +175,51 @@ def index():
     if not user:
         return redirect(url_for('login'))
 
-    guest_links = database.get_guest(db=g.db, email=user["email"])
-    print("***** GUESTS:", guest_links)
+    database.cleanup_expired_links(db=g.db)
 
-    return render_template('index.html', guest_links)
+    guest_links = database.get_guest(db=g.db, email=user["email"])
+    start_date = helper.date_to_string(datetime.now())
+    end_date = helper.date_to_string(datetime.now() + timedelta(days=7))
+
+    return render_template('index.html', guest_links=guest_links, start_date=start_date, end_date=end_date)
 
 
 @application.route('/unlock', methods=['GET'])
 def unlock():
-    token = request.cookies.get('token')
+    args = request.args
+    token = args.get("token")
+
+    if token:
+        # Unlocking using temporary link
+        guest = database.get_guest(db=g.db, token=token)
+        if guest:
+            valid_until = helper.string_to_date(guest["valid_until"])
+            today = datetime.now().replace(minute=0, hour=0, second=0)
+
+            if valid_until < today:
+                return render_template('token_expired.html')
+        else:
+            return render_template('token_expired.html')
+    else:
+        # Unlocking using normal user link
+        token = request.cookies.get('token')
+        if token:
+            user = database.get_user(db=g.db, token=token)
+            if not user:
+                return redirect(url_for('login'))
+
     if not token:
         abort(404)
-
-    guest = database.get_guest(db=g.db, token=token)
-    if not guest:
-        user = database.get_user(db=g.db, token=token)
-        if not user:
-            return render_template('token_expired.html')
 
     devices = database.get_device(db=g.db)
     if devices:
         for device in devices:
-            device_data = json.loads(device["data"])
-            topic = device_data["topic"]
-            trigger = device_data["trigger"]
+            if device["data"]:
+                device_data = json.loads(device["data"])
+                topic = device_data.get("topic", "")
+                trigger = device_data.get("trigger", "")
 
-            mqtt_publish(topic=topic, data=trigger)
+                mqtt_publish(topic=topic, data=trigger)
 
     return render_template('unlock.html')
 
@@ -276,7 +295,7 @@ def set_password_post():
         return redirect(url_for('set_password', token=token))
 
 
-@application.route('/get_temporary_unlock_link', methods=['GET'])
+@application.route('/get_temporary_unlock_link', methods=['POST'])
 def get_temporary_unlock_link():
     token = request.cookies.get('token')
     if not token:
@@ -286,9 +305,7 @@ def get_temporary_unlock_link():
     if not user:
         return redirect(url_for('login'))
 
-    args = request.args
-    valid_until = args.get("valid_until")
-    print("***** VALID UNTIL:", valid_until)
+    valid_until = request.form.get('valid_until')
 
     valid_date = helper.string_to_date(valid_until)
     if valid_date is None:

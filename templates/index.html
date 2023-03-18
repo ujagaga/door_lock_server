@@ -20,6 +20,42 @@
         {% endif %}
         {% endwith %}
         <a href="/unlock" class="big_btn">Otključaj</a>
+
+        <form class="inner_container" method="POST" action="/get_temporary_unlock_link">
+            <button class="small_btn">Generiši privremeni link</button>
+            <label for="valid_until">Važi do:</label>
+            <input type="date" id="valid_until" name="valid_until"
+                   value="{{ end_date }}"
+                   min="{{ start_date }}">
+        </form>
+
+        <div class="inner_container">
+            {% if guest_links %}
+            <h2>Lista privremenih linkova</h2>
+            <table>
+                <thead>
+                    <td>
+                        Važi do
+                    </td>
+                    <td>
+
+                    </td>
+                </thead>
+
+                {% for link in guest_links %}
+                    <tr>
+                        <td>
+                            <a href="/unlock?token={{ link.token }}">{{ link.valid_until }}</a>
+                        </td>
+                        <td>
+                            <a href="/delete_temporary_unlock_link?link_token={{ link.token }}" class="small_red_btn">X</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+
+            </table>
+            {% endif %}
+        </div>
     </div>
 </body>
 <script src="static/index.js"></script>

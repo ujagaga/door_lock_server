@@ -1,6 +1,7 @@
 import sys
 import sqlite3
 import os
+from datetime import datetime
 
 
 current_path = os.path.dirname(os.path.realpath(__file__))
@@ -50,7 +51,7 @@ def exec_db(db, query):
 
 
 def add_user(db, email: str, password: str = None):
-    sql = f"INSERT INTO users(email, password) VALUES ({email}, {password})"
+    sql = f"INSERT INTO users(email, password) VALUES ('{email}', '{password}')"
 
     try:
         exec_db(db, sql)
@@ -90,7 +91,7 @@ def get_user(db, email: str = None, token: str = None):
 
 
 def update_user(db, email: str, token: str = None, password: str = None):
-    user = get_user(email=email)
+    user = get_user(db=db, email=email)
 
     if user:
         if token is not None:
@@ -109,7 +110,7 @@ def update_user(db, email: str, token: str = None, password: str = None):
 
 
 def add_device(db, name: str, password: str = None):
-    sql = f"INSERT INTO devices (name, password) VALUES ({name}, {password})"
+    sql = f"INSERT INTO devices (name, password) VALUES ('{name}', '{password}')"
 
     try:
         exec_db(db, sql)
@@ -170,7 +171,7 @@ def update_device(db, name: str, password: str = None, token: str = None, data: 
 
 
 def add_guest(db, email: str, token: str, valid_until: str):
-    sql = f"INSERT INTO guests (email, token, valid_until) VALUES ({email}, {token}, {valid_until})"
+    sql = f"INSERT INTO guests (email, token, valid_until) VALUES ('{email}', '{token}', '{valid_until}')"
 
     try:
         exec_db(db, sql)
@@ -207,3 +208,12 @@ def get_guest(db, token: str = None, email: str = None):
         device = None
 
     return device
+
+
+def cleanup_expired_links(db):
+    sql = f"DELETE FROM guests WHERE valid_until < date('now', '-1 day')"
+    try:
+        exec_db(db, sql)
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("ERROR removing guest links from db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)

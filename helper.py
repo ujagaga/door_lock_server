@@ -6,7 +6,7 @@ from datetime import datetime
 import sys
 
 
-DATE_FORMAT = "%Y.%m.%d"
+DATE_FORMAT = "%Y-%m-%d"
 
 
 def generate_token():
@@ -25,6 +25,8 @@ def validate_email(email: str):
     regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
     if not re.fullmatch(regex, email):
         return False
+    else:
+        return True
 
 
 def validate_password(password: str):
@@ -43,9 +45,11 @@ def string_to_date(valid_until: str):
 
     try:
         result = datetime.strptime(valid_until, DATE_FORMAT)
+        # Setting to middle of the day for easier comparison.
+        result = result.replace(hour=12, minute=0)
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR updating device in db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
+        print("ERROR converting string to date on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
 
     return result
 
