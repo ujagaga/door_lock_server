@@ -1,21 +1,16 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-import time
 
 from flask import Flask, g, render_template, request, flash, url_for, redirect, make_response, abort, jsonify
 from flask_mqtt import Mqtt
 from flask_mail import Message, Mail
 import json
 import sys
-import requests
-import sqlite3
 import os
-import urllib.parse
 from datetime import datetime, timedelta
-import string
-import random
-from hashlib import sha256
 import settings
+import database
+import helper
 
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -45,130 +40,8 @@ application.config["MAIL_USE_SSL"] = True
 
 topic_file = os.path.join(current_path, "mqtt_topic.cfg")
 
-ROLE_ADMIN = "admin"
-ROLE_GUEST = "guest"
-
 mqtt_client = Mqtt(application)
 mail = Mail(application)
-
-
-def init_database():
-    if not os.path.isfile(db_path):
-        # Database does not exist. Create one
-        db = sqlite3.connect(db_path)
-
-        sql = "create table users (email TEXT, password TEXT, token TEXT, role TEXT, valid_until INTEGER)"
-        db.execute(sql)
-        db.commit()
-
-        sql = "create table devices (name TEXT, password TEXT, data TEXT, token TEXT)"
-        db.execute(sql)
-        db.commit()
-
-        db.close()
-
-
-def query_db(db, query, args=(), one=False):
-    cur = db.execute(query, args)
-    rv = [dict((cur.description[idx][0], value)
-               for idx, value in enumerate(row)) for row in cur.fetchall()]
-    return (rv[0] if rv else None) if one else rv
-
-
-def exec_db(query):
-    g.db.execute(query)
-    if not query.startswith('SELECT'):
-        g.db.commit()
-
-
-def get_user(email: str = None, token: str = None):
-    if email:
-        sql = f"SELECT * FROM users WHERE email = '{email}'"
-    elif token:
-        sql = f"SELECT * FROM users WHERE token = '{token}'"
-    else:
-        return None
-
-    try:
-        user = query_db(g.db, sql, one=True)
-    except Exception as exc:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        print(f"ERROR reading data on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
-        user = None
-
-    return user
-
-
-def update_user(email: str, token: str = None, password: str = None, role: str = None, valid_until: int = -1):
-    user = get_user(email=email)
-
-    if user:
-        if token is not None:
-            user["token"] = token
-        if password:
-            user["password"] = password
-        if role:
-            user["role"] = role
-        if valid_until:
-            user["valid_until"] = valid_until
-
-        sql = "UPDATE users SET token = '{}', password = '{}', role = '{}', valid_until = '{}' WHERE email = '{}'" \
-              "".format(user["token"], user["password"], user["role"], user["valid_until"], email)
-
-        try:
-            exec_db(sql)
-        except Exception as exc:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            print("ERROR writing user to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
-
-
-def get_device(name: str = None, token: str = None, one=True):
-    if name:
-        sql = f"SELECT * FROM devices WHERE name = '{name}'"
-    elif token:
-        sql = f"SELECT * FROM devices WHERE token = '{token}'"
-    else:
-        sql = f"SELECT * FROM devices"
-
-    try:
-        device = query_db(g.db, sql, one=one)
-    except Exception as exc:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        print(f"ERROR reading data on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
-        device = None
-
-    return device
-
-
-def update_device(name: str, token: str = None, data: str = None):
-    device = get_device(name=name)
-
-    if device:
-        if token is not None:
-            device["token"] = token
-        if data:
-            device["data"] = data
-
-        sql = "UPDATE devices SET token = '{}', data = '{}' WHERE name = '{}'" \
-              "".format(device["token"], device["data"], name)
-
-        try:
-            exec_db(sql)
-        except Exception as exc:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            print("ERROR writing user to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
-
-
-def generate_token():
-    return ''.join(random.choices(string.ascii_letters, k=32))
-
-
-def hash_password(password: str):
-    return sha256(password.encode('utf-8')).hexdigest()
-
-
-def generate_random_string():
-    return hash_password(generate_token())
 
 
 def mqtt_publish(topic: str, data: str):
@@ -185,24 +58,21 @@ def mqtt_publish(topic: str, data: str):
 
 @application.before_request
 def before_request():
-    if not os.path.isfile(db_path):
-        init_database()
-
-    g.db = sqlite3.connect(db_path)
+    g.db = database.open_db()
 
 
 @application.teardown_request
 def teardown_request(exception):
     if hasattr(g, 'db'):
-        g.db.close()
+        database.close_db(g.db)
 
 
 @application.route('/logout')
 def logout():
     token = request.cookies.get('token')
-    user = get_user(token=token)
+    user = database.get_user(db=g.db, token=token)
     if user:
-        update_user(email=user["email"], token="")
+        database.update_user(db=g.db, email=user["email"], token="")
 
     return redirect(url_for('index'))
 
@@ -217,19 +87,19 @@ def login_post():
     email = request.form.get('email')
     password = request.form.get('password')
 
-    user = get_user(email=email)
+    user = database.get_user(db=g.db, email=email)
 
     if not user:
         flash('Neispravna e-mail adresa ili lozinka.')
         return redirect(url_for('login'))
 
-    encrypted_pass = hash_password(password)
+    encrypted_pass = helper.hash_password(password)
     if encrypted_pass != user["password"]:
         flash('Neispravno korisničko ime ili lozinka.')
         return redirect(url_for('login'))
 
-    token = generate_token()
-    update_user(email=email, token=token)
+    token = helper.generate_token()
+    database.update_user(db=g.db, email=email, token=token)
 
     response = make_response(redirect(url_for('index')))
     response.set_cookie('token', token)
@@ -243,21 +113,21 @@ def device_login():
     password = args.get("password")
 
     if name and password:
-        device = get_device(name=name)
+        device = database.get_device(db=g.db, name=name)
 
         if device:
-            encrypted_pass = hash_password(password)
+            encrypted_pass = helper.hash_password(password)
             if encrypted_pass != device["password"]:
                 response = {"status": "ERROR", "detail": "Bad password or name"}
             else:
-                token = generate_token()
-                topic = generate_random_string()
-                life_sign = generate_random_string()
-                trigger = generate_random_string()
+                token = helper.generate_token()
+                topic = helper.generate_random_string()
+                life_sign = helper.generate_random_string()
+                trigger = helper.generate_random_string()
 
                 device_data = json.dumps({"lifesign": life_sign, "trigger": trigger, "topic": topic})
 
-                update_device(name=name, token=token, data=device_data)
+                database.update_device(db=g.db, name=name, token=token, data=device_data)
 
                 response = {"status": "OK", "token": token, "lifesign": life_sign, "trigger": trigger, "topic": topic}
         else:
@@ -274,9 +144,9 @@ def device_ping():
     token = args.get("token")
 
     if token:
-        device = get_device(token=token)
+        device = database.get_device(db=g.db, token=token)
         if device:
-            devices = get_device(one=False)
+            devices = database.get_device(db=g.db)
 
             if devices:
                 for device in devices:
@@ -301,27 +171,29 @@ def index():
     if not token:
         return redirect(url_for('login'))
 
-    user = get_user(token=token)
+    user = database.get_user(db=g.db, token=token)
     if not user:
         return redirect(url_for('login'))
 
-    if not user["role"] == ROLE_ADMIN:
-        return redirect(url_for('login'))
+    guest_links = database.get_guest(db=g.db, email=user["email"])
+    print("***** GUESTS:", guest_links)
 
-    return render_template('index.html')
+    return render_template('index.html', guest_links)
 
 
 @application.route('/unlock', methods=['GET'])
 def unlock():
     token = request.cookies.get('token')
     if not token:
-        return redirect(url_for('login'))
+        abort(404)
 
-    user = get_user(token=token)
-    if not user:
-        return redirect(url_for('login'))
+    guest = database.get_guest(db=g.db, token=token)
+    if not guest:
+        user = database.get_user(db=g.db, token=token)
+        if not user:
+            return render_template('token_expired.html')
 
-    devices = get_device(one=False)
+    devices = database.get_device(db=g.db)
     if devices:
         for device in devices:
             device_data = json.loads(device["data"])
@@ -341,12 +213,12 @@ def reset_password():
 @application.route('/reset_password', methods=['POST'])
 def reset_password_post():
     email = request.form.get('email')
-    user = get_user(email=email)
+    user = database.get_user(db=g.db, email=email)
 
     flash('Ako je priložena e-mail adresa u našoj bazi, poslaćemo Vam e-mail sa linkom za reset.')
     if user:
-        token = generate_token()
-        update_user(email=email, token=token)
+        token = helper.generate_token()
+        database.update_user(db=g.db, email=email, token=token)
 
         base_url = request.base_url.replace("reset_password", "set_password")
 
@@ -366,7 +238,7 @@ def set_password():
     args = request.args
     token = args.get("token")
 
-    user = get_user(token=token)
+    user = database.get_user(db=g.db, token=token)
     if not user:
         abort(404)
 
@@ -378,7 +250,7 @@ def set_password_post():
     password_1 = request.form.get('password_1')
     password_2 = request.form.get('password_2')
     token = request.form.get('token')
-    user = get_user(token=token)
+    user = database.get_user(db=g.db, token=token)
 
     if not user:
         flash("Greška: neispravan token ili je link istekao!")
@@ -388,8 +260,59 @@ def set_password_post():
         flash("Greška: lozinke nisu iste!")
         return redirect(url_for('set_password', token=token))
 
-    hashed_password = hash_password(password_1)
-    update_user(email=user["email"], password=hashed_password)
+    ret_val = helper.validate_password(password_1)
 
-    flash("Lozinka je uspešno promenjena. Sada možete da se logujete sa njom.")
-    return redirect(url_for('login'))
+    if ret_val == 0:
+        hashed_password = helper.hash_password(password_1)
+        database.update_user(db=g.db, email=user["email"], password=hashed_password)
+
+        flash("Lozinka je uspešno promenjena. Sada možete da se logujete sa njom.")
+        return redirect(url_for('login'))
+    else:
+        if ret_val == 0:
+            flash("Greška: Lozinka ne može da sadrži prazna mesta!")
+        else:
+            flash("Greška: lozinke ne može da bude kraća od 5 karaktera!")
+        return redirect(url_for('set_password', token=token))
+
+
+@application.route('/get_temporary_unlock_link', methods=['GET'])
+def get_temporary_unlock_link():
+    token = request.cookies.get('token')
+    if not token:
+        return redirect(url_for('login'))
+
+    user = database.get_user(db=g.db, token=token)
+    if not user:
+        return redirect(url_for('login'))
+
+    args = request.args
+    valid_until = args.get("valid_until")
+    print("***** VALID UNTIL:", valid_until)
+
+    valid_date = helper.string_to_date(valid_until)
+    if valid_date is None:
+        valid_date = datetime.now() + timedelta(days=7)
+        valid_until = helper.date_to_string(valid_date)
+
+    token = helper.generate_token()
+    database.add_guest(db=g.db, email=user["email"], token=token, valid_until=valid_until)
+
+    return redirect(url_for('index'))
+
+
+@application.route('/delete_temporary_unlock_link', methods=['GET'])
+def delete_temporary_unlock_link():
+    token = request.cookies.get('token')
+    if not token:
+        return redirect(url_for('login'))
+
+    user = database.get_user(db=g.db, token=token)
+    if not user:
+        return redirect(url_for('login'))
+
+    args = request.args
+    link_token = args.get("link_token")
+
+    database.delete_guest(db=g.db, token=link_token)
+    return redirect(url_for('index'))
