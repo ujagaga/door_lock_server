@@ -233,7 +233,7 @@ def get_guest(connection, db_cursor, token: str = None, email: str = None):
 
 
 def cleanup_expired_links(connection, db_cursor, ):
-    sql = f"DELETE FROM guests WHERE valid_until < date('now', '-1 day')"
+    sql = f"DELETE FROM guests WHERE valid_until < NOW() - INTERVAL 1 DAY"
     try:
         db_cursor.execute(sql)
         connection.commit()
