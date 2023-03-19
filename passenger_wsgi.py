@@ -182,6 +182,8 @@ def index():
     start_date = helper.date_to_string(datetime.now())
     end_date = helper.date_to_string(datetime.now() + timedelta(days=7))
 
+    print("***** GUESTS:", guest_links, flush=True)
+
     return render_template('index.html', guest_links=guest_links, start_date=start_date, end_date=end_date)
 
 
