@@ -11,7 +11,7 @@ def open_db():
         database=settings.DB_NAME
     )
     db_cursor = connection.cursor(buffered=True)
-    return connection, db_cursor
+    return (connection, db_cursor)
 
 
 def close_db(connection, db_cursor):
