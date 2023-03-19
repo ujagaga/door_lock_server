@@ -105,4 +105,4 @@ if __name__ == '__main__':
         print("Checking result:")
         list_users(connection, db_cursor, email=args.email)
 
-    database.close_db(connection, db_cursor, )
+    database.close_db(connection, db_cursor)

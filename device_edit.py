@@ -7,8 +7,8 @@ import database
 import helper
 
 
-def list_devices(name: str = None):
-    devices = database.get_device(name=name)
+def list_devices(connection, db_cursor, name: str = None):
+    devices = database.get_device(connection, db_cursor, name=name)
 
     message = "INFO: Listing devices in database"
 
@@ -51,7 +51,7 @@ if __name__ == '__main__':
         database.init_database(connection, db_cursor)
 
     if args.operation == 'list':
-        list_devices()
+        list_devices(connection, db_cursor)
 
     elif args.operation == 'add':
         if not args.password or not args.name:
@@ -98,4 +98,4 @@ if __name__ == '__main__':
         print("Checking result:")
         list_devices(connection, db_cursor, name=args.name)
 
-    database.close_db(connection, db_cursor, )
+    database.close_db(connection, db_cursor)
