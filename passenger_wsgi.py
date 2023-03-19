@@ -38,9 +38,6 @@ application.config["MAIL_PASSWORD"] = settings.MAIL_PASSWORD
 application.config["MAIL_USE_TLS"] = False
 application.config["MAIL_USE_SSL"] = True
 
-application.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = settings.SQLALCHEMY_TRACK_MODIFICATIONS
-application.config["SQLALCHEMY_DATABASE_URI"] = settings.SQLALCHEMY_DATABASE_URI
-
 
 topic_file = os.path.join(current_path, "mqtt_topic.cfg")
 
