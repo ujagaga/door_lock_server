@@ -1,2 +1,5 @@
 MAIL_USERNAME = "your_mail_address@gmail.com"
 MAIL_PASSWORD = "your_app_password"
+
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+SQLALCHEMY_DATABASE_URI = 'mysql://username:password@host:port/database_name'

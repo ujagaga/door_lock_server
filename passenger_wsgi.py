@@ -21,7 +21,7 @@ db_path = os.path.join(current_path, "database.db")
 application = Flask(__name__, static_url_path='/static', static_folder='static')
 
 application.config['SECRET_KEY'] = '9OLWxND4o83j4K4iuopOqwer13door'
-application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
+
 application.config['SESSION_COOKIE_NAME'] = 'door_locker'
 
 application.config['MQTT_BROKER_URL'] = 'broker.emqx.io'
@@ -37,6 +37,10 @@ application.config['MAIL_USERNAME'] = settings.MAIL_USERNAME
 application.config["MAIL_PASSWORD"] = settings.MAIL_PASSWORD
 application.config["MAIL_USE_TLS"] = False
 application.config["MAIL_USE_SSL"] = True
+
+application.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = settings.SQLALCHEMY_TRACK_MODIFICATIONS
+application.config["SQLALCHEMY_DATABASE_URI"] = settings.SQLALCHEMY_DATABASE_URI
+
 
 topic_file = os.path.join(current_path, "mqtt_topic.cfg")
 
@@ -58,21 +62,21 @@ def mqtt_publish(topic: str, data: str):
 
 @application.before_request
 def before_request():
-    g.db = database.open_db()
+    g.connection, g.db_cursor = database.open_db()
 
 
 @application.teardown_request
 def teardown_request(exception):
-    if hasattr(g, 'db'):
-        database.close_db(g.db)
+    if hasattr(g, 'connection'):
+        database.close_db(g.connection, g.db_cursor)
 
 
 @application.route('/logout')
 def logout():
     token = request.cookies.get('token')
-    user = database.get_user(db=g.db, token=token)
+    user = database.get_user(g.connection, g.db_cursor, token=token)
     if user:
-        database.update_user(db=g.db, email=user["email"], token="")
+        database.update_user(g.connection, g.db_cursor, email=user["email"], token="")
 
     return redirect(url_for('index'))
 
@@ -87,7 +91,7 @@ def login_post():
     email = request.form.get('email')
     password = request.form.get('password')
 
-    user = database.get_user(db=g.db, email=email)
+    user = database.get_user(g.connection, g.db_cursor, email=email)
 
     if not user:
         flash('Neispravna e-mail adresa ili lozinka.')
@@ -99,7 +103,7 @@ def login_post():
         return redirect(url_for('login'))
 
     token = helper.generate_token()
-    database.update_user(db=g.db, email=email, token=token)
+    database.update_user(g.connection, g.db_cursor, email=email, token=token)
 
     response = make_response(redirect(url_for('index')))
     response.set_cookie('token', token)
@@ -113,7 +117,7 @@ def device_login():
     password = args.get("password")
 
     if name and password:
-        device = database.get_device(db=g.db, name=name)
+        device = database.get_device(g.connection, g.db_cursor, name=name)
 
         if device:
             encrypted_pass = helper.hash_password(password)
@@ -127,7 +131,7 @@ def device_login():
 
                 device_data = json.dumps({"lifesign": life_sign, "trigger": trigger, "topic": topic})
 
-                database.update_device(db=g.db, name=name, token=token, data=device_data)
+                database.update_device(g.connection, g.db_cursor, name=name, token=token, data=device_data)
 
                 response = {"status": "OK", "token": token, "lifesign": life_sign, "trigger": trigger, "topic": topic}
         else:
@@ -144,9 +148,9 @@ def device_ping():
     token = args.get("token")
 
     if token:
-        device = database.get_device(db=g.db, token=token)
+        device = database.get_device(g.connection, g.db_cursor, token=token)
         if device:
-            devices = database.get_device(db=g.db)
+            devices = database.get_device(g.connection, g.db_cursor)
 
             if devices:
                 for device in devices:
@@ -171,13 +175,13 @@ def index():
     if not token:
         return redirect(url_for('login'))
 
-    user = database.get_user(db=g.db, token=token)
+    user = database.get_user(g.connection, g.db_cursor, token=token)
     if not user:
         return redirect(url_for('login'))
 
-    database.cleanup_expired_links(db=g.db)
+    database.cleanup_expired_links(g.connection, g.db_cursor)
 
-    guest_links = database.get_guest(db=g.db, email=user["email"])
+    guest_links = database.get_guest(g.connection, g.db_cursor, email=user["email"])
     start_date = helper.date_to_string(datetime.now())
     end_date = helper.date_to_string(datetime.now() + timedelta(days=7))
 
@@ -191,7 +195,7 @@ def unlock():
 
     if token:
         # Unlocking using temporary link
-        guest = database.get_guest(db=g.db, token=token)
+        guest = database.get_guest(g.connection, g.db_cursor, token=token)
         if guest:
             valid_until = helper.string_to_date(guest["valid_until"])
             today = datetime.now().replace(minute=0, hour=0, second=0)
@@ -204,14 +208,14 @@ def unlock():
         # Unlocking using normal user link
         token = request.cookies.get('token')
         if token:
-            user = database.get_user(db=g.db, token=token)
+            user = database.get_user(g.connection, g.db_cursor, token=token)
             if not user:
                 return redirect(url_for('login'))
 
     if not token:
         abort(404)
 
-    devices = database.get_device(db=g.db)
+    devices = database.get_device(g.connection, g.db_cursor)
     if devices:
         for device in devices:
             if device["data"]:
@@ -232,12 +236,12 @@ def reset_password():
 @application.route('/reset_password', methods=['POST'])
 def reset_password_post():
     email = request.form.get('email')
-    user = database.get_user(db=g.db, email=email)
+    user = database.get_user(g.connection, g.db_cursor, email=email)
 
     flash('Ako je priložena e-mail adresa u našoj bazi, poslaćemo Vam e-mail sa linkom za reset.')
     if user:
         token = helper.generate_token()
-        database.update_user(db=g.db, email=email, token=token)
+        database.update_user(g.connection, g.db_cursor, email=email, token=token)
 
         base_url = request.base_url.replace("reset_password", "set_password")
 
@@ -257,7 +261,7 @@ def set_password():
     args = request.args
     token = args.get("token")
 
-    user = database.get_user(db=g.db, token=token)
+    user = database.get_user(g.connection, g.db_cursor, token=token)
     if not user:
         abort(404)
 
@@ -269,7 +273,7 @@ def set_password_post():
     password_1 = request.form.get('password_1')
     password_2 = request.form.get('password_2')
     token = request.form.get('token')
-    user = database.get_user(db=g.db, token=token)
+    user = database.get_user(g.connection, g.db_cursor, token=token)
 
     if not user:
         flash("Greška: neispravan token ili je link istekao!")
@@ -283,7 +287,7 @@ def set_password_post():
 
     if ret_val == 0:
         hashed_password = helper.hash_password(password_1)
-        database.update_user(db=g.db, email=user["email"], password=hashed_password)
+        database.update_user(g.connection, g.db_cursor, email=user["email"], password=hashed_password)
 
         flash("Lozinka je uspešno promenjena. Sada možete da se logujete sa njom.")
         return redirect(url_for('login'))
@@ -301,7 +305,7 @@ def get_temporary_unlock_link():
     if not token:
         return redirect(url_for('login'))
 
-    user = database.get_user(db=g.db, token=token)
+    user = database.get_user(g.connection, g.db_cursor, token=token)
     if not user:
         return redirect(url_for('login'))
 
@@ -313,7 +317,7 @@ def get_temporary_unlock_link():
         valid_until = helper.date_to_string(valid_date)
 
     token = helper.generate_token()
-    database.add_guest(db=g.db, email=user["email"], token=token, valid_until=valid_until)
+    database.add_guest(g.connection, g.db_cursor, email=user["email"], token=token, valid_until=valid_until)
 
     return redirect(url_for('index'))
 
@@ -324,12 +328,12 @@ def delete_temporary_unlock_link():
     if not token:
         return redirect(url_for('login'))
 
-    user = database.get_user(db=g.db, token=token)
+    user = database.get_user(g.connection, g.db_cursor, token=token)
     if not user:
         return redirect(url_for('login'))
 
     args = request.args
     link_token = args.get("link_token")
 
-    database.delete_guest(db=g.db, token=link_token)
+    database.delete_guest(g.connection, g.db_cursor, token=link_token)
     return redirect(url_for('index'))

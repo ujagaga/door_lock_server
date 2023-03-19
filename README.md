@@ -5,7 +5,7 @@ Besides a web UI, there is an MQTT client, so WiFi enabled embedded devices can 
 NOTE: This branch is intended for use in Serbia, so most of UI is in Serbian.
 
 ## Installing dependencies
-	pip install flask flask-sqlalchemy requests flask_mqtt flask_mail
+	pip install flask requests flask_mqtt flask_mail mysql-connector-python
 
 ## Preparing and using
 To enable e-mail sending in case you lose your password, create a settings.py file like the one attached here.

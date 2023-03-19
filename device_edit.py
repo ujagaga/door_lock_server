@@ -7,8 +7,8 @@ import database
 import helper
 
 
-def list_devices(db_obj, name: str = None):
-    devices = database.get_device(db=db_obj, name=name)
+def list_devices(name: str = None):
+    devices = database.get_device(name=name)
 
     message = "INFO: Listing devices in database"
 
@@ -47,15 +47,17 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     db = database.open_db()
+    if not database.check_table_exists("devices"):
+        database.init_database()
 
     if args.operation == 'list':
-        list_devices(db_obj=db)
+        list_devices()
 
     elif args.operation == 'add':
         if not args.password or not args.name:
             sys.exit("ERROR: Please provide both name and password to create a new device")
 
-        device = database.get_device(db=db, name=args.name)
+        device = database.get_device(name=args.name)
         if device:
             sys.exit(f"ERROR: Device exists: {device}")
 
@@ -66,20 +68,20 @@ if __name__ == '__main__':
             f"\n\tname:    {args.name}"
             f"\n\tpassword: {args.password}"            
             )
-        database.add_device(db=db, name=args.name, password=helper.hash_password(args.password))
+        database.add_device(name=args.name, password=helper.hash_password(args.password))
 
         print("Checking result:")
-        list_devices(db_obj=db, name=args.name)
+        list_devices(name=args.name)
 
     elif args.operation == 'delete':
         if not args.name:
             sys.exit("ERROR: Please provide name of the device to delete.")
 
         print(f"INFO: Deleting device with name: {args.name}")
-        database.delete_device(db=db, name=args.name)
+        database.delete_device(name=args.name)
 
         print("Checking result:")
-        list_devices(db_obj=db, name=args.name)
+        list_devices(name=args.name)
 
     elif args.operation == 'modify':
         if not args.name:
@@ -91,9 +93,9 @@ if __name__ == '__main__':
             sys.exit("ERROR: Please provide password to set.")
 
         print(f"INFO: Modifying device: {args.name}")
-        database.update_device(db=db, name=args.name, password=helper.hash_password(args.password))
+        database.update_device(name=args.name, password=helper.hash_password(args.password))
 
         print("Checking result:")
-        list_devices(db_obj=db, name=args.name)
+        list_devices(name=args.name)
 
-    database.close_db(db)
+    database.close_db()
