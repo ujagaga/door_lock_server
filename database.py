@@ -93,7 +93,7 @@ def get_user(connection, db_cursor, email: str = None, token: str = None):
 
 
 def update_user(connection, db_cursor, email: str, token: str = None, password: str = None):
-    user = get_user(email=email)
+    user = get_user(connection, db_cursor, email=email)
 
     if user:
         if token is not None:
@@ -162,7 +162,7 @@ def get_device(connection, db_cursor, name: str = None, token: str = None):
 
 
 def update_device(connection, db_cursor, name: str, password: str = None, token: str = None, data: str = None):
-    device = get_device(name=name)
+    device = get_device(connection, db_cursor, name=name)
 
     if device:
         if token is not None:
