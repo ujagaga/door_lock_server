@@ -7,8 +7,8 @@ import database
 import helper
 
 
-def list_users(email: str = None):
-    users = database.get_user(email=email)
+def list_users(connection, db_cursor, email: str = None):
+    users = database.get_user(connection, db_cursor, email=email)
     message = "INFO: Listing users in database"
 
     if email:
@@ -50,9 +50,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    database.open_db()
-    if not database.check_table_exists("users"):
-        database.init_database()
+    connection, db_cursor = database.open_db()
+    if not database.check_table_exists(connection, db_cursor, "users"):
+        database.init_database(connection, db_cursor)
 
     if args.operation == 'list':
         list_users()
@@ -62,7 +62,7 @@ if __name__ == '__main__':
             sys.exit("ERROR: Please provide both password and email to create a new user")
 
         # Check if user with same username exists
-        user = database.get_user(email=args.email)
+        user = database.get_user(connection, db_cursor, email=args.email)
         if user:
             sys.exit(f"ERROR: User exists: {user}")
 
@@ -76,19 +76,19 @@ if __name__ == '__main__':
             f"\n\tpassword: {args.password}"            
             )
 
-        database.add_user(email=args.email, password=helper.hash_password(args.password))
+        database.add_user(connection, db_cursor, email=args.email, password=helper.hash_password(args.password))
         print("Checking result:")
-        list_users(email=args.email)
+        list_users(connection, db_cursor, email=args.email)
 
     elif args.operation == 'delete':
         if not args.email:
             sys.exit("ERROR: Please provide email of the user to delete.")
 
         print(f"INFO: Deleting user with email: {args.email}")
-        database.delete_user(email=args.email)
+        database.delete_user(connection, db_cursor, email=args.email)
 
         print("Checking result:")
-        list_users(email=args.email)
+        list_users(connection, db_cursor, email=args.email)
 
     elif args.operation == 'modify':
         if not args.email:
@@ -100,9 +100,9 @@ if __name__ == '__main__':
         validate_password(args.password)
 
         print(f"INFO: Modifying user: {args.email}")
-        database.update_user(email=args.email, password=helper.hash_password(args.password))
+        database.update_user(connection, db_cursor, email=args.email, password=helper.hash_password(args.password))
 
         print("Checking result:")
-        list_users(email=args.email)
+        list_users(connection, db_cursor, email=args.email)
 
-    database.close_db()
+    database.close_db(connection, db_cursor, )
