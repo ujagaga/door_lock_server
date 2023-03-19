@@ -78,9 +78,12 @@ def get_user(connection, db_cursor, email: str = None, token: str = None):
     try:
         db_cursor.execute(sql)
         if one:
-            user = db_cursor.fetchone()
+            data = db_cursor.fetchone()
+            user = {"email": data[0], "password": data[1], "token": data[2]}
         else:
-            user = db_cursor.fetchall()
+            user = []
+            for data in db_cursor.fetchall():
+                user.append({"email": data[0], "password": data[1], "token": data[2]})
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print(f"ERROR reading data on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
@@ -144,9 +147,12 @@ def get_device(connection, db_cursor, name: str = None, token: str = None):
     try:
         db_cursor.execute(sql)
         if one:
-            device = db_cursor.fetchone()
+            data = db_cursor.fetchone()
+            device = {"name": data[0], "password": data[1], "data": data[2], "token": data[3]}
         else:
-            device = db_cursor.fetchall()
+            device = []
+            for data in db_cursor.fetchall():
+                device.append({"name": data[0], "password": data[1], "data": data[2], "token": data[3]})
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print(f"ERROR reading data on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
@@ -212,9 +218,12 @@ def get_guest(connection, db_cursor, token: str = None, email: str = None):
     try:
         db_cursor.execute(sql)
         if one:
-            guest = db_cursor.fetchone()
+            data = db_cursor.fetchone()
+            guest = {"email": data[0], "token": data[1], "valid_until": data[2]}
         else:
-            guest = db_cursor.fetchall()
+            guest = []
+            for data in db_cursor.fetchall():
+                guest.append({"email": data[0], "token": data[1], "valid_until": data[2]})
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print(f"ERROR reading data on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
