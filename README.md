@@ -3,6 +3,10 @@ Python Flask server with user login and generating temporary url.
 This server is intended for controlling a WiFi enabled door lock at a guesthouse. 
 Besides a web UI, there is an MQTT client so WiFi enabled embedded devices can connect to the server and receive commands.
 
+NOTE: this version uses sqlite database and is simpler for local development, but on hosting it does not perform well, 
+so there is also branch "lt19mysql" which uses MySql and works better. It is intended for use at a specific address, 
+so you should go through HTML and adjust.
+
 ## Installing dependencies
 	pip install flask flask-sqlalchemy requests flask_mqtt flask_mail
 
@@ -53,7 +57,6 @@ When you click the unlock button, the server will send the trigger string to all
 ## Change history
 
 18.03.2023. Adding temporary link generating.
-TODO: add language support.
 
 17.03.2023. Functional app with user login, password recovery, device login and MQTT communication.
 TODO: add generating temporary unlock string for guests.
