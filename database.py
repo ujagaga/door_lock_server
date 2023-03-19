@@ -28,7 +28,7 @@ def init_database(connection, db_cursor):
     sql = "create table devices (name varchar(255) NOT NULL UNIQUE, password varchar(255) NOT NULL, data varchar(255), token varchar(32) UNIQUE)"
     db_cursor.execute(sql)
 
-    sql = "create table guests (email varchar(255), token varchar(32) UNIQUE, valid_until INTEGER)"
+    sql = "create table guests (email varchar(255), token varchar(32) UNIQUE, valid_until varchar(16))"
     db_cursor.execute(sql)
 
     connection.commit()
@@ -233,7 +233,7 @@ def get_guest(connection, db_cursor, token: str = None, email: str = None):
 
 
 def cleanup_expired_links(connection, db_cursor, ):
-    sql = f"DELETE FROM guests WHERE valid_until < NOW() - INTERVAL 1 DAY"
+    sql = f"DELETE FROM guests WHERE valid_until < (NOW() - INTERVAL 1 DAY)"
     try:
         db_cursor.execute(sql)
         connection.commit()
