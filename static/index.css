@@ -95,7 +95,7 @@ color: white;
 table{
     width: 100%;
 }
-td a, td p{
+td p{
     text-align: center;
     margin: auto;
 }

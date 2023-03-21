@@ -51,7 +51,7 @@
                             <a href="/unlock?token={{ link.token }}">{{ link.valid_until }}</a>
                         </td>
                         <td>
-                            <a href="/delete_temporary_unlock_link?link_token={{ link.token }}" class="small_red_btn">X</a>
+                            <p><a href="/delete_temporary_unlock_link?link_token={{ link.token }}" class="small_red_btn">X</a></p>
                         </td>
                     </tr>
                 {% endfor %}
