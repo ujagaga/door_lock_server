@@ -59,6 +59,39 @@
             </table>
             {% endif %}
         </div>
+
+        <div class="inner_container">
+            {% if connected_devices %}
+            <h2>Lista konektovanih brava</h2>
+            <table>
+                <thead>
+                    <td>
+                        Naziv
+                    </td>
+                    <td>
+                        Status
+                    </td>
+                </thead>
+
+                {% for device in connected_devices %}
+                    <tr>
+                        <td>
+                            {{ device.name }}
+                        </td>
+                        <td>
+                            {% if device.connected %}
+                            prisutna
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+
+            </table>
+            {% endif %}
+        </div>
+
     </div>
 </body>
 <script src="static/index.js"></script>

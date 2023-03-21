@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+import time
 
 from flask import Flask, g, render_template, request, flash, url_for, redirect, make_response, abort, jsonify
 from flask_mqtt import Mqtt
@@ -126,11 +127,23 @@ def device_login():
                 life_sign = helper.generate_random_string()
                 trigger = helper.generate_random_string()
 
-                device_data = json.dumps({"lifesign": life_sign, "trigger": trigger, "topic": topic})
+                device_data = json.dumps({
+                    "lifesign": life_sign,
+                    "trigger": trigger,
+                    "topic": topic,
+                    "timeout": settings.LIFESIGN_TIMEOUT
+                })
 
                 database.update_device(g.connection, g.db_cursor, name=name, token=token, data=device_data)
 
-                response = {"status": "OK", "token": token, "lifesign": life_sign, "trigger": trigger, "topic": topic}
+                response = {
+                    "status": "OK",
+                    "token": token,
+                    "lifesign": life_sign,
+                    "trigger": trigger,
+                    "topic": topic,
+                    "timeout": settings.LIFESIGN_TIMEOUT
+                }
         else:
             response = {"status": "ERROR", "detail": "Bad password or name"}
     else:
@@ -147,11 +160,16 @@ def device_ping():
     if token:
         device = database.get_device(g.connection, g.db_cursor, token=token)
         if device:
+            # Update device ping time
+            device_data = json.loads(device["data"])
+            device_data["ping_time"] = int(time.time())
+            database.update_device(g.connection, g.db_cursor, data=json.dumps(device_data))
+
             devices = database.get_device(g.connection, g.db_cursor)
 
             if devices:
-                for device in devices:
-                    device_data = json.loads(device["data"])
+                for item in devices:
+                    device_data = json.loads(item["data"])
                     topic = device_data["topic"]
                     lifesign = device_data["lifesign"]
 
@@ -182,9 +200,22 @@ def index():
     start_date = helper.date_to_string(datetime.now())
     end_date = helper.date_to_string(datetime.now() + timedelta(days=7))
 
-    print("***** GUESTS:", guest_links, flush=True)
+    connected_devices = []
+    devices = database.get_device(g.connection, g.db_cursor)
+    if devices:
+        for device in devices:
+            device_data = json.loads(device["data"])
+            ping_time = device_data.get("ping_time", 0)
+            dev_connected = (time.time() - ping_time) > (settings.LIFESIGN_TIMEOUT * 1.5)
+            connected_devices.append({"name": device_data["name"], "connected": dev_connected})
 
-    return render_template('index.html', guest_links=guest_links, start_date=start_date, end_date=end_date)
+    return render_template(
+        'index.html',
+        guest_links=guest_links,
+        start_date=start_date,
+        end_date=end_date,
+        connected_devices=connected_devices
+    )
 
 
 @application.route('/unlock', methods=['GET'])

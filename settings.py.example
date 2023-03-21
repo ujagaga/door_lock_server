@@ -5,3 +5,5 @@ DB_HOST = "host"
 DB_USER = "username"
 DB_PASS = "password"
 DB_NAME = "database_name"
+
+LIFESIGN_TIMEOUT = 120
