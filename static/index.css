@@ -98,5 +98,5 @@ table{
 
 td:nth-child(2), th:nth-child(2) {
     width: 3em;
-    text-align: center;
+    text-align: left;
 }
