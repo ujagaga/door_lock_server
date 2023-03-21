@@ -30,24 +30,10 @@ static void callback(char* topic, byte* payload, unsigned int length) {
   for(int i = 0; i < length; i++){
     textMsg[i] = (char)payload[i];        
   }
-
-  Serial.println(textMsg);
   
-//  StaticJsonDocument<512> doc;
-//  DeserializationError error = deserializeJson(doc, payload);    
-//
-//  if(error) {
-//    Serial.print("Failed to parse JSON response.");
-//    Serial.println(error.f_str());
-//  }else{    
-//    const char* status = doc["status"];
-//      
-//    if(strcmp(status, "OK") == 0){
-//      if(strcmp(doc["lifesign"], mqttLifesign) != 0){
-//        HTTPC_init();
-//      }
-//    }
-//  }
+  if(strcmp(textMsg, mqttLifesign) != 0){
+    HTTPC_init();
+  }   
 }
 
 

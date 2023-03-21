@@ -7,6 +7,7 @@
 
 
 static uint32_t lifesignTriggered = 0;
+static uint32_t pingTime = 0;
 static uint32_t lifesignTimeout = 0;
 static char token[64] = {0};
 
@@ -24,8 +25,6 @@ void pingServer(void){
     if(payload.indexOf("ERROR") > 0){
       Serial.println("Ping error:" + payload);
       lifesignTimeout = 0;
-    }else{
-      Serial.println("Ping:" + payload);    
     }
   }
   else {
@@ -64,9 +63,6 @@ void HTTPC_init(void){
         lifesignTimeout = doc["timeout"];
         lifesignTimeout *= 1000;
 
-        Serial.print("LIFESIGN TIMEOUT:");
-        Serial.println(lifesignTimeout);
-
         MQTT_setAuthorization(doc["topic"], doc["trigger"], doc["lifesign"]);
       }
     }
@@ -78,16 +74,20 @@ void HTTPC_init(void){
   http.end();
 }
 
+void HTTP_markLifesignTime(){
+  lifesignTriggered = millis();
+}
+
 void HTTPC_process(void){
-  if(lifesignTimeout == 0){
-    if((millis() - lifesignTriggered) > 2000){
+  if(pingTime == 0){
+    if((millis() - pingTime) > 2000){
       HTTPC_init();
-      lifesignTriggered = millis();
+      pingTime = millis();
     }
   }else{
-    if((millis() - lifesignTriggered) > lifesignTimeout){
+    if((millis() - pingTime) > lifesignTimeout){
       pingServer();
-      lifesignTriggered = millis();
+      pingTime = millis();
     }
   }
 }
