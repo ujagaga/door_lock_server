@@ -100,6 +100,10 @@ td p{
     margin: auto;
 }
 
+td:nth-child(1), th:nth-child(1) {
+    text-align: left;
+}
+
 td:nth-child(2), th:nth-child(2) {
     width: 2em;
 }
