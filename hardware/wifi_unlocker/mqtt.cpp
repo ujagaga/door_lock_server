@@ -28,8 +28,6 @@ static char mqttTopic[256] = {0};
 static char mqttTrigger[256] = {0};
 static char mqttLifesign[256] = {0};
 
-static uint32_t lifesignTime = 0;
-
 
 WiFiUDP wifiudp;
 mDNSResolver::Resolver resolver(wifiudp);
@@ -100,13 +98,15 @@ void MQTT_setAuthorization(const char* topic, const char* trigger, const char* l
   strcpy(mqttTrigger, trigger);
   strcpy(mqttLifesign, lifesign);
 
+  Serial.print("Topic:");
+  Serial.println(mqttTopic);
+  Serial.print("Trigger:");
+  Serial.println(mqttTrigger);
+  Serial.print("Lifesign:");
+  Serial.println(mqttLifesign);
+  
   mqttclient.subscribe(mqttTopic);
   
-}
-
-
-uint32_t MQTT_getLifesignTime(void){
-  return lifesignTime;
 }
 
 

@@ -36,7 +36,6 @@ void setup(void) {
   HTTPS_init();
   WS_init();  
   HTTPC_init();
-//  MQTT_init();
 }
 
 

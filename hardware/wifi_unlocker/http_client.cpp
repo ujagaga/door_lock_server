@@ -7,6 +7,7 @@
 
 
 static uint32_t lifesignTriggered = 0;
+static uint32_t lifesignTimeout = 0;
 static char token[64] = {0};
 
 WiFiClient client;
@@ -22,7 +23,7 @@ void pingServer(void){
     String payload = http.getString();
     if(payload.indexOf("ERROR") > 0){
       Serial.println("Ping error:" + payload);
-      token[0] = 0;
+      lifesignTimeout = 0;
     }    
   }
   else {
@@ -37,7 +38,7 @@ void pingServer(void){
 }
 
 void HTTPC_init(void){  
-  String serverPath = String(LOCK_SERVER_URL) + "/device_login?name=ulazlt19&password=svetapetka";
+  String serverPath = String(LOCK_SERVER_URL) + "/device_login?name=" + DEV_NAME + "&password=" + DEV_PASSWORD;
   http.begin(client, serverPath.c_str());
 
   int httpResponseCode = http.GET();
@@ -57,6 +58,8 @@ void HTTPC_init(void){
         
       if(strcmp(status, "OK") == 0){
         strcpy(token, doc["token"]);
+        lifesignTimeout = doc["timeout"];
+        lifesignTimeout *= 1000;
 
         MQTT_setAuthorization(doc["topic"], doc["trigger"], doc["lifesign"]);
       }
@@ -70,12 +73,15 @@ void HTTPC_init(void){
 }
 
 void HTTPC_process(void){
-  if(millis() > 10000){
-    if((strlen(token) > 20) && (millis() - lifesignTriggered) > (LIFESIGN_TIMEOUT * 1000)){ 
-      pingServer();
-    }else{
+  if(lifesignTimeout == 0){
+    if((millis() - lifesignTriggered) > 2000){
       HTTPC_init();
+      lifesignTriggered = millis();
     }
-    lifesignTriggered = millis();
+  }else{
+    if((millis() - lifesignTriggered) > lifesignTimeout){
+      pingServer();
+      lifesignTriggered = millis();
+    }
   }
 }

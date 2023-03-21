@@ -13,6 +13,7 @@ The device fails to create an AP if total AP name is longer than 31 character. *
 #define SWITCH_PIN               2 /* D4 */   
 #define UNLOCK_DURATION          (20)
 #define LOCK_SERVER_URL         "http://your_door.server"
+#define DEV_NAME                "your_dev_name_as_set_on_server"
 #define DEV_PASSWORD		"your_device_password_set_on_server"
 
 #endif
