@@ -25,13 +25,6 @@ application.config['SECRET_KEY'] = '9OLWxND4o83j4K4iuopOqwer13door'
 
 application.config['SESSION_COOKIE_NAME'] = 'door_locker'
 
-application.config['MQTT_BROKER_URL'] = 'broker.emqx.io'
-application.config['MQTT_BROKER_PORT'] = 1883
-application.config['MQTT_USERNAME'] = ''  # Set this item when you need to verify username and password
-application.config['MQTT_PASSWORD'] = ''  # Set this item when you need to verify username and password
-application.config['MQTT_KEEPALIVE'] = 5  # Set KeepAlive time in seconds
-application.config['MQTT_TLS_ENABLED'] = False  # If your server supports TLS, set it T
-
 application.config['MAIL_SERVER'] = "smtp.gmail.com"
 application.config['MAIL_PORT'] = 465
 application.config['MAIL_USERNAME'] = settings.MAIL_USERNAME
@@ -44,7 +37,7 @@ mqtt_client = mqtt.Client()
 
 
 def mqtt_connect():
-    mqtt_client.connect(application.config['MQTT_BROKER_URL'], application.config['MQTT_BROKER_PORT'], 60)
+    mqtt_client.connect(settings.MQTT_BROKER_URL, settings.MQTT_BROKER_PORT, 60)
     mqtt_client.loop_start()
 
 
