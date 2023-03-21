@@ -95,6 +95,9 @@ color: white;
 table{
     width: 100%;
 }
+td a, td p{
+    width 100%;
+}
 
 td:nth-child(2), th:nth-child(2) {
     width: 3em;
