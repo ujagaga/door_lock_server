@@ -29,8 +29,9 @@ http://your_server_tld/device_login&name=device_name&password=dev_pass
 
 The server will respond with a json array similar to:
 {
-  "lifesign": "443b25b1997e50514db23a2b7a6d8279b3e3334cff22ae5d1afc429e41dd4213",
   "status": "OK",
+  "timeout": 120,
+  "lifesign": "443b25b1997e50514db23a2b7a6d8279b3e3334cff22ae5d1afc429e41dd4213",  
   "token": "awWuxjqCMTWruhGPdPaacArEcPPMppoA",
   "topic": "80e5043888b6d6794f4e7380a33f58432739df84999b8f626dac49d891c96309",
   "trigger": "f6c0f5f9c1e862377a1a76fd21d911fc0a308014dffc9f1daa1032d0fc1a1cff"
@@ -46,6 +47,9 @@ http://your_server_tld/device_ping&token=device_token
 This will cause the server to send the lifesign string to all connected devices, so your device can check 
 if the server is available and if any parameters changed. If it does not get the lifesign signal, 
 best is to login again to receive the updated data.
+
+The timeout is the number of seconds after which the device should ping the server. If the device does not ping 
+the server for too long, it will be considered unconnected and displayed on the webpage.
 
 When you click the unlock button, the server will send the trigger string to all devices.
 

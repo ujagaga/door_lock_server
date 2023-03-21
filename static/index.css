@@ -79,3 +79,31 @@ table{
     padding: 0;
     margin: 20px 0;
 }
+.semaphore{
+    border-radius: 50%;
+    width: 1em;
+    height: 1em;
+}
+color: white;
+}
+.green{
+    background-color: green;
+}
+.red{
+    background-color: red;
+}
+table{
+    width: 100%;
+}
+td p{
+    text-align: center;
+    margin: auto;
+}
+
+td:nth-child(1), th:nth-child(1) {
+    text-align: left;
+}
+
+td:nth-child(2), th:nth-child(2) {
+    width: 2em;
+}

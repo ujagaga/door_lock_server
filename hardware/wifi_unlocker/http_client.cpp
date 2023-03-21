@@ -19,12 +19,14 @@ void pingServer(void){
   http.begin(client, serverPath.c_str());
 
   int httpResponseCode = http.GET();
-  if (httpResponseCode>0) { 
+  if (httpResponseCode > 0) { 
     String payload = http.getString();
     if(payload.indexOf("ERROR") > 0){
       Serial.println("Ping error:" + payload);
       lifesignTimeout = 0;
-    }    
+    }else{
+      Serial.println("Ping:" + payload);    
+    }
   }
   else {
     Serial.print(serverPath + "\nError code: ");        
@@ -38,6 +40,7 @@ void pingServer(void){
 }
 
 void HTTPC_init(void){  
+  Serial.println("HTTPC_init");
   String serverPath = String(LOCK_SERVER_URL) + "/device_login?name=" + DEV_NAME + "&password=" + DEV_PASSWORD;
   http.begin(client, serverPath.c_str());
 
@@ -60,6 +63,9 @@ void HTTPC_init(void){
         strcpy(token, doc["token"]);
         lifesignTimeout = doc["timeout"];
         lifesignTimeout *= 1000;
+
+        Serial.print("LIFESIGN TIMEOUT:");
+        Serial.println(lifesignTimeout);
 
         MQTT_setAuthorization(doc["topic"], doc["trigger"], doc["lifesign"]);
       }

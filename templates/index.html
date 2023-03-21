@@ -59,6 +59,31 @@
             </table>
             {% endif %}
         </div>
+
+        <div class="inner_container">
+            {% if connected_devices %}
+            <h2>List of connected devices</h2>
+            <table>
+                {% for device in connected_devices %}
+                    <tr>
+                        <td>
+                            {{ device.name }}
+                        </td>
+                        <td>
+                            {% if device.connected %}
+                            <p class="semaphore green">+</p>
+                            {% else %}
+                            <p class="semaphore red">-</p>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+            {% endif %}
+        </div>
+
+        </div>
+
     </div>
 </body>
 <script src="static/index.js"></script>

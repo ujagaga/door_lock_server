@@ -5,10 +5,8 @@
  *  MQTT client module to anounce itself to iot-portal and accept MQTT commands.
  */
 #include <PubSubClient.h>
-#include <mDNSResolver.h>
 #include <ESP8266WiFi.h>
 #include <ArduinoJson.h>
-//#include "pinctrl.h"
 #include "mqtt.h"
 #include "wifi_connection.h"
 #include "http_client.h"
@@ -21,18 +19,10 @@ PubSubClient mqttclient(espClient);
 static char msgBuffer[256] = {0};
 static uint32_t connectAttemptTime = 0;
 static char clientName[32] = {0};
-static IPAddress mqttServerIp;
 static char mqttTopic[256] = {0};
 static char mqttTrigger[256] = {0};
 static char mqttLifesign[256] = {0};
 
-
-WiFiUDP wifiudp;
-mDNSResolver::Resolver resolver(wifiudp);
-  
-static void resolve_mDNS(){
-  mqttServerIp = resolver.search(MQTT_SERVER_HOSTNAME);  
-}
 
 static void callback(char* topic, byte* payload, unsigned int length) {  
 
@@ -43,18 +33,18 @@ static void callback(char* topic, byte* payload, unsigned int length) {
 
   Serial.println(textMsg);
   
-//  StaticJsonDocument<128> doc;
-//  DeserializationError error = deserializeJson(doc, textMsg);    
+//  StaticJsonDocument<512> doc;
+//  DeserializationError error = deserializeJson(doc, payload);    
 //
-//  // Test if parsing succeeds.
-//  if (!error) {
-//    JsonObject root = doc.as<JsonObject>();
-//    
-//    if(root.containsKey("current")){
-//      JsonArray array = root["current"].as<JsonArray>();
-//      for(JsonVariant v : array) {
-//          int value = v.as<int>();
-//          PINCTRL_write(value); 
+//  if(error) {
+//    Serial.print("Failed to parse JSON response.");
+//    Serial.println(error.f_str());
+//  }else{    
+//    const char* status = doc["status"];
+//      
+//    if(strcmp(status, "OK") == 0){
+//      if(strcmp(doc["lifesign"], mqttLifesign) != 0){
+//        HTTPC_init();
 //      }
 //    }
 //  }
@@ -84,30 +74,19 @@ void MQTT_setAuthorization(const char* topic, const char* trigger, const char* l
 
 
 static void mqtt_connect() {
-  if(mqttServerIp == IPADDR_NONE){
-    resolve_mDNS();
-  }
-
-  if(mqttServerIp == IPADDR_NONE){
-    Serial.println("ERROR: MQTT server IP could not be resolved.");   
-    return;
-  }
-
   if(strlen(mqttTopic) == 0){
     Serial.println("ERROR: MQTT topic not set.");   
     return;
   }
     
-  mqttclient.setServer(mqttServerIp, PORT);
+  mqttclient.setServer(MQTT_SERVER_HOSTNAME, MQTT_PORT);
   mqttclient.setCallback(callback);
   // Attempt to connect
   if (mqttclient.connect(DEV_NAME)) {
     Serial.println("connected");
     mqttclient.subscribe(mqttTopic);
   } else {
-    Serial.print("MQTT failed. Server IP:");   
-    Serial.println(mqttServerIp);
-    Serial.print("ERROR:");
+    Serial.print("ERROR: MQTT failed: ");
     Serial.println(mqttclient.state());
   }  
 }
