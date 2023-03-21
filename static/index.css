@@ -96,12 +96,11 @@ table{
     width: 100%;
 }
 td a, td p{
-    width 100%;
+    width: 100%;
     text-align: center;
 }
 
 td:nth-child(2), th:nth-child(2) {
     width: 3em;
-    text-align: center;
     border: 1px solid;
 }
