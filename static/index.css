@@ -102,5 +102,4 @@ td p{
 
 td:nth-child(2), th:nth-child(2) {
     width: 2em;
-    border: 1px solid;
 }
