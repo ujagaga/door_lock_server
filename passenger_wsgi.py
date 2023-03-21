@@ -40,8 +40,6 @@ application.config["MAIL_USE_TLS"] = False
 application.config["MAIL_USE_SSL"] = True
 
 
-topic_file = os.path.join(current_path, "mqtt_topic.cfg")
-
 mqtt_client = Mqtt(application)
 mail = Mail(application)
 

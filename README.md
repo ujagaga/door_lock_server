@@ -58,7 +58,6 @@ When you click the unlock button, the server will send the trigger string to all
 ## Change history
 
 18.03.2023. Adding temporary link generating.
-TODO: add language support.
 
 17.03.2023. Functional app with user login, password recovery, device login and MQTT communication.
 TODO: add generating temporary unlock string for guests.
