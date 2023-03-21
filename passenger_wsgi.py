@@ -3,7 +3,6 @@
 import time
 
 from flask import Flask, g, render_template, request, flash, url_for, redirect, make_response, abort, jsonify
-from flask_mqtt import Mqtt
 from flask_mail import Message, Mail
 import json
 import sys
@@ -12,6 +11,7 @@ from datetime import datetime, timedelta
 import settings
 import database
 import helper
+import paho.mqtt.client as mqtt
 
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -25,7 +25,7 @@ application.config['SECRET_KEY'] = '9OLWxND4o83j4K4iuopOqwer13door'
 
 application.config['SESSION_COOKIE_NAME'] = 'door_locker'
 
-application.config['MQTT_BROKER_URL'] = 'broker.emqx.io'
+application.config['MQTT_BROKER_URL'] = 'mqtt://broker.emqx.io'
 application.config['MQTT_BROKER_PORT'] = 1883
 application.config['MQTT_USERNAME'] = ''  # Set this item when you need to verify username and password
 application.config['MQTT_PASSWORD'] = ''  # Set this item when you need to verify username and password
@@ -39,21 +39,25 @@ application.config["MAIL_PASSWORD"] = settings.MAIL_PASSWORD
 application.config["MAIL_USE_TLS"] = False
 application.config["MAIL_USE_SSL"] = True
 
-
-mqtt_client = Mqtt(application)
 mail = Mail(application)
+mqtt_client = mqtt.Client()
+
+
+def mqtt_connect():
+    mqtt_client.connect(application.config['MQTT_BROKER_URL'], application.config['MQTT_BROKER_PORT'], 60)
+    mqtt_client.loop_start()
+
+
+def mqtt_disconnect():
+    mqtt_client.loop_stop()
+    mqtt_client.disconnect()
 
 
 def mqtt_publish(topic: str, data: str):
-    try:
-        ret = mqtt_client.publish(topic, data)
+    global mqtt_client
 
-        if ret[0] != 0:
-            print(f"ERROR publishing to MQTT. Error code: {ret}!", flush=True)
-
-    except Exception as exc:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR publishing to MQTT on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
+    publish_result = mqtt_client.publish(topic=topic, payload=data, qos=1, retain=False)
+    publish_result.wait_for_publish()
 
 
 @application.before_request
@@ -169,12 +173,16 @@ def device_ping():
                 devices = database.get_device(g.connection, g.db_cursor)
 
                 if devices:
+                    mqtt_connect()
+
                     for item in devices:
                         device_data = json.loads(item["data"])
                         topic = device_data["topic"]
                         lifesign = device_data["lifesign"]
 
                         mqtt_publish(topic=topic, data=lifesign)
+
+                    mqtt_disconnect()
 
                 response = {"status": "OK"}
             except Exception as exc:
