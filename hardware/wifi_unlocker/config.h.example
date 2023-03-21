@@ -16,4 +16,7 @@ The device fails to create an AP if total AP name is longer than 31 character. *
 #define DEV_NAME                "your_dev_name_as_set_on_server"
 #define DEV_PASSWORD		"your_device_password_set_on_server"
 
+#define MQTT_SERVER_HOSTNAME  	"broker.emqx.io"
+#define MQTT_PORT               1883
+
 #endif

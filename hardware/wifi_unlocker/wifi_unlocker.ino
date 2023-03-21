@@ -42,6 +42,6 @@ void setup(void) {
 void loop(void) {  
   HTTPS_process();  
   WS_process();
-//  MQTT_process();
   HTTPC_process();
+  MQTT_process();  
 }

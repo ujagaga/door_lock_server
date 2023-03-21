@@ -12,10 +12,8 @@
 #include "mqtt.h"
 #include "wifi_connection.h"
 #include "http_client.h"
+#include "config.h"
 
-
-#define MQTT_SERVER_HOSTNAME  "broker.emqx.io"
-#define PORT                  1883
 #define CONNECT_TIMEOUT       (10000ul) 
 
 WiFiClient espClient;
@@ -63,33 +61,6 @@ static void callback(char* topic, byte* payload, unsigned int length) {
 }
 
 
-static void mqtt_connect() {
-  if(mqttServerIp == IPADDR_NONE){
-    resolve_mDNS();
-  }
-
-  if(mqttServerIp == IPADDR_NONE){
-    Serial.println("ERROR: MQTT server IP could not be resolved.");   
-    return;
-  }
-    
-  mqttclient.setServer(mqttServerIp, PORT);
-  mqttclient.setCallback(callback);
-  // Attempt to connect
-  if (mqttclient.connect(clientName)) {
-    Serial.println("connected");
-    mqttclient.subscribe(clientName);
-//    mqttclient.publish(STATUS_TOPIC, msgBuffer);
-
-  } else {
-    Serial.print("MQTT failed. Server IP:");   
-    Serial.println(mqttServerIp);
-    Serial.print("ERROR:");
-    Serial.println(mqttclient.state());
-  }
-  
-}
-
 void MQTT_setAuthorization(const char* topic, const char* trigger, const char* lifesign){  
   if(mqttclient.connected()){
     mqttclient.unsubscribe(mqttTopic);
@@ -105,21 +76,40 @@ void MQTT_setAuthorization(const char* topic, const char* trigger, const char* l
   Serial.print("Lifesign:");
   Serial.println(mqttLifesign);
   
-  mqttclient.subscribe(mqttTopic);
-  
+  if(mqttclient.connected()){
+      mqttclient.disconnect();
+  }
 }
 
 
-void MQTT_init(){
-  resolve_mDNS();  
-  Serial.print("MQTT Server IP:");   
-  Serial.println(mqttServerIp);
 
-  String macAddr = WiFi.macAddress();
-  macAddr.replace(":", "");
-  macAddr.toCharArray(clientName, sizeof(clientName));  
-  Serial.println("MQTT client name:" + macAddr);
-  mqtt_connect();
+static void mqtt_connect() {
+  if(mqttServerIp == IPADDR_NONE){
+    resolve_mDNS();
+  }
+
+  if(mqttServerIp == IPADDR_NONE){
+    Serial.println("ERROR: MQTT server IP could not be resolved.");   
+    return;
+  }
+
+  if(strlen(mqttTopic) == 0){
+    Serial.println("ERROR: MQTT topic not set.");   
+    return;
+  }
+    
+  mqttclient.setServer(mqttServerIp, PORT);
+  mqttclient.setCallback(callback);
+  // Attempt to connect
+  if (mqttclient.connect(DEV_NAME)) {
+    Serial.println("connected");
+    mqttclient.subscribe(mqttTopic);
+  } else {
+    Serial.print("MQTT failed. Server IP:");   
+    Serial.println(mqttServerIp);
+    Serial.print("ERROR:");
+    Serial.println(mqttclient.state());
+  }  
 }
 
 void MQTT_process(){
@@ -127,10 +117,10 @@ void MQTT_process(){
     // Not connected. Try again.
     mqtt_connect();
     connectAttemptTime = millis();
-  }
-
-  if(mqttclient.connected() && (msgBuffer[0] != 0)){
-    msgBuffer[0] = 0;
+    
+    if(mqttclient.connected() && (msgBuffer[0] != 0)){    
+      msgBuffer[0] = 0;
+    }    
   }
   
   mqttclient.loop();  
