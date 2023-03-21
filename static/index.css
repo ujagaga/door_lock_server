@@ -92,3 +92,9 @@ color: white;
 .red{
     background-color: red;
 }
+table{
+    width: 100%;
+}
+td:nth-child(2), th:nth-child(2) {
+    width: 3em;
+}
