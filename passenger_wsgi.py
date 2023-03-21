@@ -25,7 +25,7 @@ application.config['SECRET_KEY'] = '9OLWxND4o83j4K4iuopOqwer13door'
 
 application.config['SESSION_COOKIE_NAME'] = 'door_locker'
 
-application.config['MQTT_BROKER_URL'] = 'mqtt://broker.emqx.io'
+application.config['MQTT_BROKER_URL'] = 'broker.emqx.io'
 application.config['MQTT_BROKER_PORT'] = 1883
 application.config['MQTT_USERNAME'] = ''  # Set this item when you need to verify username and password
 application.config['MQTT_PASSWORD'] = ''  # Set this item when you need to verify username and password
