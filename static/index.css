@@ -79,3 +79,16 @@ table{
     padding: 0;
     margin: 20px 0;
 }
+.semaphore{
+    border-radius: 50%;
+    width: 1em;
+    height: 1em;
+}
+color: white;
+}
+.green{
+    background-color: green;
+}
+.red{
+    background-color: red;
+}

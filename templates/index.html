@@ -64,15 +64,6 @@
             {% if connected_devices %}
             <h2>Lista konektovanih brava</h2>
             <table>
-                <thead>
-                    <td>
-                        Naziv
-                    </td>
-                    <td>
-                        Status
-                    </td>
-                </thead>
-
                 {% for device in connected_devices %}
                     <tr>
                         <td>
@@ -80,16 +71,17 @@
                         </td>
                         <td>
                             {% if device.connected %}
-                            prisutna
+                            <p class="semaphore green">+</p>
                             {% else %}
-                            -
+                            <p class="semaphore red">-</p>
                             {% endif %}
                         </td>
                     </tr>
                 {% endfor %}
-
             </table>
             {% endif %}
+        </div>
+
         </div>
 
     </div>
