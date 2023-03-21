@@ -12,7 +12,7 @@ The device fails to create an AP if total AP name is longer than 31 character. *
 #define AP_NAME_PREFIX          "LT19_Lock"
 #define SWITCH_PIN               2 /* D4 */   
 #define UNLOCK_DURATION          (20)
-#define LOCK_SERVER_URL         "http://ulaz.drslavica.com"
-#define LIFESIGN_TIMEOUT        (60)
+#define LOCK_SERVER_URL         "http://your_door.server"
+#define DEV_PASSWORD		"your_device_password_set_on_server"
 
 #endif
