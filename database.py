@@ -25,7 +25,7 @@ def init_database(connection, db_cursor):
     sql = "create table users (email varchar(255) NOT NULL UNIQUE, password varchar(255) NOT NULL, token varchar(32) UNIQUE)"
     db_cursor.execute(sql)
 
-    sql = "create table devices (name varchar(255) NOT NULL UNIQUE, password varchar(255) NOT NULL, data varchar(255), token varchar(32) UNIQUE)"
+    sql = "create table devices (name varchar(255) NOT NULL UNIQUE, password varchar(255) NOT NULL, data varchar(512), token varchar(32) UNIQUE)"
     db_cursor.execute(sql)
 
     sql = "create table guests (email varchar(255), token varchar(32) UNIQUE, valid_until varchar(16))"

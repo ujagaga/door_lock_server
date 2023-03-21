@@ -158,22 +158,29 @@ def device_ping():
     if token:
         device = database.get_device(g.connection, g.db_cursor, token=token)
         if device:
-            # Update device ping time
-            device_data = json.loads(device["data"])
-            device_data["ping_time"] = int(time.time())
-            database.update_device(g.connection, g.db_cursor, data=json.dumps(device_data))
+            try:
+                # Update device ping time
+                raw_data = device["data"]
+                device_data = json.loads(raw_data)
 
-            devices = database.get_device(g.connection, g.db_cursor)
+                device_data["ping_time"] = int(time.time())
+                database.update_device(g.connection, g.db_cursor, name=device["name"], data=json.dumps(device_data))
 
-            if devices:
-                for item in devices:
-                    device_data = json.loads(item["data"])
-                    topic = device_data["topic"]
-                    lifesign = device_data["lifesign"]
+                devices = database.get_device(g.connection, g.db_cursor)
 
-                    mqtt_publish(topic=topic, data=lifesign)
+                if devices:
+                    for item in devices:
+                        device_data = json.loads(item["data"])
+                        topic = device_data["topic"]
+                        lifesign = device_data["lifesign"]
 
-            response = {"status": "OK"}
+                        mqtt_publish(topic=topic, data=lifesign)
+
+                response = {"status": "OK"}
+            except Exception as exc:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                print(f"ERROR: parsing device on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
+                response = {"status": "ERROR", "detail": "JSON parsing error"}
         else:
             response = {"status": "ERROR", "detail": "Unauthorized"}
     else:
