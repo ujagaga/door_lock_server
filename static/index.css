@@ -98,6 +98,7 @@ table{
 td p{
     text-align: center;
     margin: auto;
+    display: block;
 }
 
 td:nth-child(2), th:nth-child(2) {
