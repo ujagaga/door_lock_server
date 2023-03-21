@@ -97,6 +97,7 @@ table{
 }
 td a, td p{
     width 100%;
+    text-align: center;
 }
 
 td:nth-child(2), th:nth-child(2) {
