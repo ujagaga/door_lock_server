@@ -207,7 +207,7 @@ def index():
             device_data = json.loads(device["data"])
             ping_time = device_data.get("ping_time", 0)
             dev_connected = (time.time() - ping_time) > (settings.LIFESIGN_TIMEOUT * 1.5)
-            connected_devices.append({"name": device_data["name"], "connected": dev_connected})
+            connected_devices.append({"name": device["name"], "connected": dev_connected})
 
     return render_template(
         'index.html',
