@@ -9,14 +9,14 @@
 
 /* 19 characters maximum. When we append MAC addr, it will be 31. 
 The device fails to create an AP if total AP name is longer than 31 character. */
-#define AP_NAME_PREFIX          "LT19_Lock"
+#define AP_NAME_PREFIX          "Door_lock_"
 #define SWITCH_PIN               2 /* D4 */   
-#define UNLOCK_DURATION          (20)
+#define UNLOCK_DURATION          (10)
 #define LOCK_SERVER_URL         "http://your_door.server"
 #define DEV_NAME                "your_dev_name_as_set_on_server"
 #define DEV_PASSWORD		"your_device_password_set_on_server"
 
-#define MQTT_SERVER_HOSTNAME  	"broker.emqx.io"
-#define MQTT_PORT               1883
+#define MQTT_SERVER_HOSTNAME  "broker.emqx.io"
+#define MQTT_PORT             1883
 
 #endif

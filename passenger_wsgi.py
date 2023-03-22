@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-import time
 
 from flask import Flask, g, render_template, request, flash, url_for, redirect, make_response, abort, jsonify
-from flask_mqtt import Mqtt
 from flask_mail import Message, Mail
+import time
 import json
 import sys
 import os
@@ -12,50 +11,42 @@ from datetime import datetime, timedelta
 import settings
 import database
 import helper
+import paho.mqtt.client as mqtt
 
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-current_path = os.path.dirname(os.path.realpath(__file__))
-db_path = os.path.join(current_path, "database.db")
-
 application = Flask(__name__, static_url_path='/static', static_folder='static')
 
 application.config['SECRET_KEY'] = '9OLWxND4o83j4K4iuopOqwer13door'
-application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 application.config['SESSION_COOKIE_NAME'] = 'door_locker'
 
-application.config['MQTT_BROKER_URL'] = 'broker.emqx.io'
-application.config['MQTT_BROKER_PORT'] = 1883
-application.config['MQTT_USERNAME'] = ''  # Set this item when you need to verify username and password
-application.config['MQTT_PASSWORD'] = ''  # Set this item when you need to verify username and password
-application.config['MQTT_KEEPALIVE'] = 5  # Set KeepAlive time in seconds
-application.config['MQTT_TLS_ENABLED'] = False  # If your server supports TLS, set it T
-
-application.config['MAIL_SERVER'] = "smtp.gmail.com"
+application.config['MAIL_SERVER'] = settings.MAIL_SERVER
 application.config['MAIL_PORT'] = 465
 application.config['MAIL_USERNAME'] = settings.MAIL_USERNAME
 application.config["MAIL_PASSWORD"] = settings.MAIL_PASSWORD
 application.config["MAIL_USE_TLS"] = False
 application.config["MAIL_USE_SSL"] = True
 
-
-topic_file = os.path.join(current_path, "mqtt_topic.cfg")
-
-mqtt_client = Mqtt(application)
 mail = Mail(application)
+mqtt_client = mqtt.Client()
+
+
+def mqtt_connect():
+    mqtt_client.connect(settings.MQTT_BROKER_URL, settings.MQTT_BROKER_PORT, 60)
+    mqtt_client.loop_start()
+
+
+def mqtt_disconnect():
+    mqtt_client.loop_stop()
+    mqtt_client.disconnect()
 
 
 def mqtt_publish(topic: str, data: str):
-    try:
-        ret = mqtt_client.publish(topic, data)
+    global mqtt_client
 
-        if ret[0] != 0:
-            print(f"ERROR publishing to MQTT. Error code: {ret}!", flush=True)
-
-    except Exception as exc:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR publishing to MQTT on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
+    publish_result = mqtt_client.publish(topic=topic, payload=data, qos=1, retain=False)
+    publish_result.wait_for_publish()
 
 
 @application.before_request
@@ -160,22 +151,55 @@ def device_ping():
     if token:
         device = database.get_device(db=g.db, token=token)
         if device:
-            # Update device ping time
-            device_data = json.loads(device["data"])
-            device_data["ping_time"] = int(time.time())
-            database.update_device(db=g.db, data=json.dumps(device_data))
+            try:
+                devices = database.get_device(db=g.db)
 
-            devices = database.get_device(db=g.db)
+                if devices:
+                    mqtt_connect()
 
-            if devices:
-                for item in devices:
-                    device_data = json.loads(item["data"])
-                    topic = device_data["topic"]
-                    lifesign = device_data["lifesign"]
+                    for item in devices:
+                        device_data = json.loads(item["data"])
+                        topic = device_data["topic"]
+                        lifesign = device_data["lifesign"]
 
-                    mqtt_publish(topic=topic, data=lifesign)
+                        mqtt_publish(topic=topic, data=lifesign)
 
-            response = {"status": "OK"}
+                    mqtt_disconnect()
+
+                response = {"status": "OK"}
+            except Exception as exc:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                print(f"ERROR: parsing device on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
+                response = {"status": "ERROR", "detail": "JSON parsing error"}
+        else:
+            response = {"status": "ERROR", "detail": "Unauthorized"}
+    else:
+        response = {"status": "ERROR", "detail": "Missing token"}
+
+    return jsonify(response)
+
+
+@application.route('/device_lifesign_confirm', methods=['GET'])
+def device_lifesign_confirm():
+    args = request.args
+    token = args.get("token")
+
+    if token:
+        device = database.get_device(db=g.db, token=token)
+        if device:
+            try:
+                # Update device ping time
+                raw_data = device["data"]
+                device_data = json.loads(raw_data)
+
+                device_data["ping_time"] = int(time.time())
+                database.update_device(db=g.db, name=device["name"], data=json.dumps(device_data))
+
+                response = {"status": "OK"}
+            except Exception as exc:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                print(f"ERROR: parsing device on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
+                response = {"status": "ERROR", "detail": "JSON parsing error"}
         else:
             response = {"status": "ERROR", "detail": "Unauthorized"}
     else:
@@ -247,6 +271,7 @@ def unlock():
 
     devices = database.get_device(db=g.db)
     if devices:
+        mqtt_connect()
         for device in devices:
             if device["data"]:
                 device_data = json.loads(device["data"])
@@ -254,6 +279,7 @@ def unlock():
                 trigger = device_data.get("trigger", "")
 
                 mqtt_publish(topic=topic, data=trigger)
+        mqtt_disconnect()
 
     return render_template('unlock.html')
 

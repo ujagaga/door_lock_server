@@ -6,9 +6,10 @@
 #include "mqtt.h"
 
 
-static uint32_t lifesignTriggered = 0;
+static uint32_t pingTime = 0;
 static uint32_t lifesignTimeout = 0;
 static char token[64] = {0};
+bool initialHandshakeDone = false;
 
 WiFiClient client;
 HTTPClient http;
@@ -24,8 +25,6 @@ void pingServer(void){
     if(payload.indexOf("ERROR") > 0){
       Serial.println("Ping error:" + payload);
       lifesignTimeout = 0;
-    }else{
-      Serial.println("Ping:" + payload);    
     }
   }
   else {
@@ -33,14 +32,30 @@ void pingServer(void){
     Serial.println(httpResponseCode);
   }
   // Free resources
-  http.end();
+  http.end();  
+}
 
-  lifesignTriggered = millis();
-  
+void HTTPC_confirmLifesign(void){  
+  String serverPath = String(LOCK_SERVER_URL) + "/device_lifesign_confirm?token=" + String(token);
+  http.begin(client, serverPath.c_str());
+
+  int httpResponseCode = http.GET();
+  if (httpResponseCode > 0) { 
+    String payload = http.getString();
+    if(payload.indexOf("ERROR") > 0){
+      Serial.println("Ping error:" + payload);
+      lifesignTimeout = 0;
+    }
+  }
+  else {
+    Serial.print(serverPath + "\nError code: ");        
+    Serial.println(httpResponseCode);
+  }
+  // Free resources
+  http.end();  
 }
 
 void HTTPC_init(void){  
-  Serial.println("HTTPC_init");
   String serverPath = String(LOCK_SERVER_URL) + "/device_login?name=" + DEV_NAME + "&password=" + DEV_PASSWORD;
   http.begin(client, serverPath.c_str());
 
@@ -48,7 +63,6 @@ void HTTPC_init(void){
   
   if (httpResponseCode > 0) {
     String payload = http.getString();
-    Serial.println(payload);
     
     StaticJsonDocument<512> doc;
     DeserializationError error = deserializeJson(doc, payload);    
@@ -61,11 +75,12 @@ void HTTPC_init(void){
         
       if(strcmp(status, "OK") == 0){
         strcpy(token, doc["token"]);
+
+        Serial.print("Token:    ");
+        Serial.println(token);
+        
         lifesignTimeout = doc["timeout"];
         lifesignTimeout *= 1000;
-
-        Serial.print("LIFESIGN TIMEOUT:");
-        Serial.println(lifesignTimeout);
 
         MQTT_setAuthorization(doc["topic"], doc["trigger"], doc["lifesign"]);
       }
@@ -78,16 +93,22 @@ void HTTPC_init(void){
   http.end();
 }
 
+
 void HTTPC_process(void){
-  if(lifesignTimeout == 0){
-    if((millis() - lifesignTriggered) > 2000){
-      HTTPC_init();
-      lifesignTriggered = millis();
-    }
+  if(!initialHandshakeDone){
+  
+    HTTPC_init();      
+    initialHandshakeDone = true;
+  
   }else{
-    if((millis() - lifesignTriggered) > lifesignTimeout){
+    if(pingTime == 0){
+      if(MQTT_isConnected()){
+        pingServer();
+        pingTime = millis();
+      }
+    }else if((millis() - pingTime) > lifesignTimeout){
       pingServer();
-      lifesignTriggered = millis();
+      pingTime = millis();      
     }
   }
 }

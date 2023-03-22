@@ -3,5 +3,6 @@
 
 extern void MQTT_process(void);
 extern void MQTT_setAuthorization(const char* topic, const char* trigger, const char* lifesign);
+extern bool MQTT_isConnected(void);
 
 #endif

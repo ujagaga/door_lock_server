@@ -11,6 +11,8 @@
 #include "wifi_connection.h"
 #include "http_client.h"
 #include "config.h"
+#include "pinctrl.h"
+
 
 #define CONNECT_TIMEOUT       (10000ul) 
 
@@ -30,24 +32,17 @@ static void callback(char* topic, byte* payload, unsigned int length) {
   for(int i = 0; i < length; i++){
     textMsg[i] = (char)payload[i];        
   }
-
-  Serial.println(textMsg);
   
-//  StaticJsonDocument<512> doc;
-//  DeserializationError error = deserializeJson(doc, payload);    
-//
-//  if(error) {
-//    Serial.print("Failed to parse JSON response.");
-//    Serial.println(error.f_str());
-//  }else{    
-//    const char* status = doc["status"];
-//      
-//    if(strcmp(status, "OK") == 0){
-//      if(strcmp(doc["lifesign"], mqttLifesign) != 0){
-//        HTTPC_init();
-//      }
-//    }
-//  }
+  if(strcmp(textMsg, mqttLifesign) == 0){
+    Serial.println("MQTT lifesign");
+    HTTPC_confirmLifesign();
+  }else if(strcmp(textMsg, mqttTrigger) == 0){
+    Serial.println("MQTT trigger");
+    PINCTRL_trigger();
+  }else{
+    Serial.println("Unexpected MQTT message. Re-initializing.");
+    HTTPC_init();
+  }  
 }
 
 
@@ -59,11 +54,11 @@ void MQTT_setAuthorization(const char* topic, const char* trigger, const char* l
   strcpy(mqttTrigger, trigger);
   strcpy(mqttLifesign, lifesign);
 
-  Serial.print("Topic:");
+  Serial.print("Topic:    ");
   Serial.println(mqttTopic);
-  Serial.print("Trigger:");
+  Serial.print("Trigger:  ");
   Serial.println(mqttTrigger);
-  Serial.print("Lifesign:");
+  Serial.print("Lifesign: ");
   Serial.println(mqttLifesign);
   
   if(mqttclient.connected()){
@@ -83,7 +78,7 @@ static void mqtt_connect() {
   mqttclient.setCallback(callback);
   // Attempt to connect
   if (mqttclient.connect(DEV_NAME)) {
-    Serial.println("connected");
+    Serial.println("MQTT connected");
     mqttclient.subscribe(mqttTopic);
   } else {
     Serial.print("ERROR: MQTT failed: ");
@@ -103,4 +98,8 @@ void MQTT_process(){
   }
   
   mqttclient.loop();  
+}
+
+bool MQTT_isConnected(void){
+  return mqttclient.connected();
 }

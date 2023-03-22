@@ -11,8 +11,8 @@
 #include "web_socket.h"
 #include "wifi_connection.h"
 #include "config.h"
-//#include "pinctrl.h"
 #include "mqtt.h"
+#include "pinctrl.h"
 
 
 static String statusMessage = "";         /* This is set and requested from other modules. */
@@ -29,13 +29,11 @@ void setup(void) {
   /* Need to wait for background processes to complete. Otherwise trouble with gpio.*/
   delay(100);   
   Serial.begin(115200,SERIAL_8N1,SERIAL_TX_ONLY); /* Use only tx, so rx can be used as GPIO */   
-  //ESP.eraseConfig();
-  pinMode(SWITCH_PIN, OUTPUT);
-  // PINCTRL_write(1);  
+  //ESP.eraseConfig();  
+  PINCTRL_init();  
   WIFIC_init();
   HTTPS_init();
   WS_init();  
-  HTTPC_init();
 }
 
 
@@ -44,4 +42,5 @@ void loop(void) {
   WS_process();
   HTTPC_process();
   MQTT_process();  
+  PINCTRL_process();
 }
