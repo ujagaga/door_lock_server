@@ -31,9 +31,14 @@ static void callback(char* topic, byte* payload, unsigned int length) {
     textMsg[i] = (char)payload[i];        
   }
   
-  if(strcmp(textMsg, mqttLifesign) != 0){
-    HTTPC_init();
-  }   
+  if(strcmp(textMsg, mqttLifesign) == 0){
+    HTTPC_confirmLifesign();
+    Serial.println("**** ConfirmLifesign");
+  }else if(strcmp(textMsg, mqttTrigger) == 0){
+    // Unlock door
+    Serial.println("**** Unlock");
+  }
+  
 }
 
 

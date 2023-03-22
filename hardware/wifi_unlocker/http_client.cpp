@@ -6,7 +6,6 @@
 #include "mqtt.h"
 
 
-static uint32_t lifesignTriggered = 0;
 static uint32_t pingTime = 0;
 static uint32_t lifesignTimeout = 0;
 static char token[64] = {0};
@@ -32,14 +31,30 @@ void pingServer(void){
     Serial.println(httpResponseCode);
   }
   // Free resources
-  http.end();
+  http.end();  
+}
 
-  lifesignTriggered = millis();
-  
+void HTTPC_confirmLifesign(void){  
+  String serverPath = String(LOCK_SERVER_URL) + "/device_lifesign_confirm?token=" + String(token);
+  http.begin(client, serverPath.c_str());
+
+  int httpResponseCode = http.GET();
+  if (httpResponseCode > 0) { 
+    String payload = http.getString();
+    if(payload.indexOf("ERROR") > 0){
+      Serial.println("Ping error:" + payload);
+      lifesignTimeout = 0;
+    }
+  }
+  else {
+    Serial.print(serverPath + "\nError code: ");        
+    Serial.println(httpResponseCode);
+  }
+  // Free resources
+  http.end();  
 }
 
 void HTTPC_init(void){  
-  Serial.println("HTTPC_init");
   String serverPath = String(LOCK_SERVER_URL) + "/device_login?name=" + DEV_NAME + "&password=" + DEV_PASSWORD;
   http.begin(client, serverPath.c_str());
 
@@ -47,7 +62,6 @@ void HTTPC_init(void){
   
   if (httpResponseCode > 0) {
     String payload = http.getString();
-    Serial.println(payload);
     
     StaticJsonDocument<512> doc;
     DeserializationError error = deserializeJson(doc, payload);    
@@ -74,13 +88,11 @@ void HTTPC_init(void){
   http.end();
 }
 
-void HTTP_markLifesignTime(){
-  lifesignTriggered = millis();
-}
 
 void HTTPC_process(void){
   if(pingTime == 0){
     if((millis() - pingTime) > 2000){
+      Serial.println("***1");
       HTTPC_init();
       pingTime = millis();
     }

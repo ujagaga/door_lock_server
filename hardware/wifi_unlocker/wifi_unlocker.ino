@@ -35,7 +35,6 @@ void setup(void) {
   WIFIC_init();
   HTTPS_init();
   WS_init();  
-  HTTPC_init();
 }
 
 

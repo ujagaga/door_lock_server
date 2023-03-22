@@ -275,6 +275,7 @@ def unlock():
 
     devices = database.get_device(g.connection, g.db_cursor)
     if devices:
+        mqtt_connect()
         for device in devices:
             if device["data"]:
                 device_data = json.loads(device["data"])
@@ -282,6 +283,7 @@ def unlock():
                 trigger = device_data.get("trigger", "")
 
                 mqtt_publish(topic=topic, data=trigger)
+        mqtt_disconnect()
 
     return render_template('unlock.html')
 
