@@ -29,9 +29,14 @@ body{
     text-decoration: none;
     margin: 5px;
 }
+.navbar{
+    display: block;
+    width: 100%;
+    background-color: #f98d40;
+}
 .nav_btn{
-    color: white;
-    background-color: orange;
+    color: #f98d40;
+    background-color: #3a3a3a;
     display: inline-block;
     padding: 5px;
     border-radius: 5px;
