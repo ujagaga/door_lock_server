@@ -11,6 +11,8 @@
 #include "wifi_connection.h"
 #include "http_client.h"
 #include "config.h"
+#include "pinctrl.h"
+
 
 #define CONNECT_TIMEOUT       (10000ul) 
 
@@ -36,7 +38,7 @@ static void callback(char* topic, byte* payload, unsigned int length) {
     HTTPC_confirmLifesign();
   }else if(strcmp(textMsg, mqttTrigger) == 0){
     Serial.println("MQTT trigger");
-
+    PINCTRL_trigger();
   }else{
     Serial.println("Unexpected MQTT message. Re-initializing.");
     HTTPC_init();
@@ -52,11 +54,11 @@ void MQTT_setAuthorization(const char* topic, const char* trigger, const char* l
   strcpy(mqttTrigger, trigger);
   strcpy(mqttLifesign, lifesign);
 
-  Serial.print("Topic:\t");
+  Serial.print("Topic:    ");
   Serial.println(mqttTopic);
-  Serial.print("Trigger\t:");
+  Serial.print("Trigger:  ");
   Serial.println(mqttTrigger);
-  Serial.print("Lifesign:\t");
+  Serial.print("Lifesign: ");
   Serial.println(mqttLifesign);
   
   if(mqttclient.connected()){
@@ -96,4 +98,8 @@ void MQTT_process(){
   }
   
   mqttclient.loop();  
+}
+
+bool MQTT_isConnected(void){
+  return mqttclient.connected();
 }

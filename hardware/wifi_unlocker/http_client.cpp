@@ -9,6 +9,7 @@
 static uint32_t pingTime = 0;
 static uint32_t lifesignTimeout = 0;
 static char token[64] = {0};
+bool initialHandshakeDone = false;
 
 WiFiClient client;
 HTTPClient http;
@@ -75,7 +76,7 @@ void HTTPC_init(void){
       if(strcmp(status, "OK") == 0){
         strcpy(token, doc["token"]);
 
-        Serial.print("Token:\t");
+        Serial.print("Token:    ");
         Serial.println(token);
         
         lifesignTimeout = doc["timeout"];
@@ -94,15 +95,20 @@ void HTTPC_init(void){
 
 
 void HTTPC_process(void){
-  if(pingTime == 0){
-    if((millis() - pingTime) > 2000){
-      HTTPC_init();
-      pingTime = millis();
-    }
+  if(!initialHandshakeDone){
+  
+    HTTPC_init();      
+    initialHandshakeDone = true;
+  
   }else{
-    if((millis() - pingTime) > lifesignTimeout){
+    if(pingTime == 0){
+      if(MQTT_isConnected()){
+        pingServer();
+        pingTime = millis();
+      }
+    }else if((millis() - pingTime) > lifesignTimeout){
       pingServer();
-      pingTime = millis();
+      pingTime = millis();      
     }
   }
 }
