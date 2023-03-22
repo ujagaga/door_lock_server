@@ -38,7 +38,7 @@ body{
 .navbar{
     display: inline-block;
     width: 100%;
-    background-color: #f98d40;
+    border-bottom: 1px solid black;
 }
 .nav_btn{
     color: #f98d40;
@@ -53,7 +53,7 @@ body{
 
 .small_btn{
     color: white;
-    background-color: orange;
+    background-color: #f98d40;
     display: inline-block;
     padding: 5px;
     border-radius: 5px;
