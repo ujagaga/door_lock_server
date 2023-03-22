@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-import time
 
 from flask import Flask, g, render_template, request, flash, url_for, redirect, make_response, abort, jsonify
 from flask_mail import Message, Mail
+import time
 import json
 import sys
 import os
@@ -25,7 +25,7 @@ application.config['SECRET_KEY'] = '9OLWxND4o83j4K4iuopOqwer13door'
 
 application.config['SESSION_COOKIE_NAME'] = 'door_locker'
 
-application.config['MAIL_SERVER'] = "smtp.gmail.com"
+application.config['MAIL_SERVER'] = settings.MAIL_SERVER
 application.config['MAIL_PORT'] = 465
 application.config['MAIL_USERNAME'] = settings.MAIL_USERNAME
 application.config["MAIL_PASSWORD"] = settings.MAIL_PASSWORD
@@ -156,13 +156,6 @@ def device_ping():
         device = database.get_device(g.connection, g.db_cursor, token=token)
         if device:
             try:
-                # Update device ping time
-                raw_data = device["data"]
-                device_data = json.loads(raw_data)
-
-                device_data["ping_time"] = int(time.time())
-                database.update_device(g.connection, g.db_cursor, name=device["name"], data=json.dumps(device_data))
-
                 devices = database.get_device(g.connection, g.db_cursor)
 
                 if devices:
@@ -176,6 +169,35 @@ def device_ping():
                         mqtt_publish(topic=topic, data=lifesign)
 
                     mqtt_disconnect()
+
+                response = {"status": "OK"}
+            except Exception as exc:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                print(f"ERROR: parsing device on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
+                response = {"status": "ERROR", "detail": "JSON parsing error"}
+        else:
+            response = {"status": "ERROR", "detail": "Unauthorized"}
+    else:
+        response = {"status": "ERROR", "detail": "Missing token"}
+
+    return jsonify(response)
+
+
+@application.route('/device_lifesign_confirm', methods=['GET'])
+def device_lifesign_confirm():
+    args = request.args
+    token = args.get("token")
+
+    if token:
+        device = database.get_device(g.connection, g.db_cursor, token=token)
+        if device:
+            try:
+                # Update device ping time
+                raw_data = device["data"]
+                device_data = json.loads(raw_data)
+
+                device_data["ping_time"] = int(time.time())
+                database.update_device(g.connection, g.db_cursor, name=device["name"], data=json.dumps(device_data))
 
                 response = {"status": "OK"}
             except Exception as exc:
