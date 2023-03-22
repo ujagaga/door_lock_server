@@ -16,13 +16,9 @@ import paho.mqtt.client as mqtt
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-current_path = os.path.dirname(os.path.realpath(__file__))
-db_path = os.path.join(current_path, "database.db")
-
 application = Flask(__name__, static_url_path='/static', static_folder='static')
 
 application.config['SECRET_KEY'] = '9OLWxND4o83j4K4iuopOqwer13door'
-
 application.config['SESSION_COOKIE_NAME'] = 'door_locker'
 
 application.config['MAIL_SERVER'] = settings.MAIL_SERVER
