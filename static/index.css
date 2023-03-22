@@ -30,9 +30,11 @@ body{
     margin: 5px;
 }
 .navbar{
-    display: block;
+    display: inline-block;
     width: 100%;
     background-color: #f98d40;
+    position: fixed;
+
 }
 .nav_btn{
     color: #f98d40;
