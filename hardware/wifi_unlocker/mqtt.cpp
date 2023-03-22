@@ -32,13 +32,15 @@ static void callback(char* topic, byte* payload, unsigned int length) {
   }
   
   if(strcmp(textMsg, mqttLifesign) == 0){
+    Serial.println("MQTT lifesign");
     HTTPC_confirmLifesign();
-    Serial.println("**** ConfirmLifesign");
   }else if(strcmp(textMsg, mqttTrigger) == 0){
-    // Unlock door
-    Serial.println("**** Unlock");
-  }
-  
+    Serial.println("MQTT trigger");
+
+  }else{
+    Serial.println("Unexpected MQTT message. Re-initializing.");
+    HTTPC_init();
+  }  
 }
 
 
@@ -50,11 +52,11 @@ void MQTT_setAuthorization(const char* topic, const char* trigger, const char* l
   strcpy(mqttTrigger, trigger);
   strcpy(mqttLifesign, lifesign);
 
-  Serial.print("Topic:");
+  Serial.print("Topic:\t");
   Serial.println(mqttTopic);
-  Serial.print("Trigger:");
+  Serial.print("Trigger\t:");
   Serial.println(mqttTrigger);
-  Serial.print("Lifesign:");
+  Serial.print("Lifesign:\t");
   Serial.println(mqttLifesign);
   
   if(mqttclient.connected()){
@@ -74,7 +76,7 @@ static void mqtt_connect() {
   mqttclient.setCallback(callback);
   // Attempt to connect
   if (mqttclient.connect(DEV_NAME)) {
-    Serial.println("connected");
+    Serial.println("MQTT connected");
     mqttclient.subscribe(mqttTopic);
   } else {
     Serial.print("ERROR: MQTT failed: ");

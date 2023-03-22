@@ -74,6 +74,10 @@ void HTTPC_init(void){
         
       if(strcmp(status, "OK") == 0){
         strcpy(token, doc["token"]);
+
+        Serial.print("Token:\t");
+        Serial.println(token);
+        
         lifesignTimeout = doc["timeout"];
         lifesignTimeout *= 1000;
 
@@ -92,7 +96,6 @@ void HTTPC_init(void){
 void HTTPC_process(void){
   if(pingTime == 0){
     if((millis() - pingTime) > 2000){
-      Serial.println("***1");
       HTTPC_init();
       pingTime = millis();
     }
