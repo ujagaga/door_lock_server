@@ -72,8 +72,7 @@ def get_user(connection, db_cursor, email: str = None, token: str = None):
     elif token:
         sql = f"SELECT * FROM users WHERE token = '{token}'"
     else:
-        sql = f"SELECT * FROM users"
-        one = False
+        return None
 
     try:
         db_cursor.execute(sql)
