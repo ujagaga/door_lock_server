@@ -81,7 +81,7 @@ def login_post():
     password = request.form.get('password')
 
     user = database.get_user(g.connection, g.db_cursor, email=email)
-
+    print("***** USER:", user)
     if not user:
         flash('Neispravna e-mail adresa ili lozinka.')
         return redirect(url_for('login'))
