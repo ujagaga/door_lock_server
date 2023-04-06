@@ -234,6 +234,7 @@ def index():
 
     return render_template(
         'index.html',
+        token=token,
         guest_links=guest_links,
         start_date=start_date,
         end_date=end_date,
@@ -247,7 +248,7 @@ def unlock():
     token = args.get("token")
 
     if token:
-        # Unlocking using temporary link
+        # Unlocking using token from url
         guest = database.get_guest(g.connection, g.db_cursor, token=token)
         if guest:
             valid_until = helper.string_to_date(guest["valid_until"])
@@ -256,7 +257,9 @@ def unlock():
             if valid_until < today:
                 return render_template('token_expired.html')
         else:
-            return render_template('token_expired.html')
+            user = database.get_user(g.connection, g.db_cursor, token=token)
+            if not user:
+                return render_template('token_expired.html')
     else:
         # Unlocking using normal user link
         token = request.cookies.get('token')

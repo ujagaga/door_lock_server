@@ -6,17 +6,13 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>LT19 NS</title>
+    <title>vm120 NS</title>
     <link rel="icon" type="image/x-icon" href="static/favicon.ico">
     <link rel="stylesheet" href="static/index.css"/>
 </head>
 <body>
     <div class="container">
-        <div class="navbar">
-            <a href="/logout" class="nav_btn">Odjavi se</a>
-        </div>
-
-        <h1>Laze Telečkog 19</h1>
+        <h1>Veselina Masleše 120</h1>
 
         {% with messages = get_flashed_messages() %}
         {% if messages %}
@@ -25,7 +21,7 @@
             </p>
         {% endif %}
         {% endwith %}
-        <a href="/unlock" class="big_btn">Otključaj</a>
+        <a href="/unlock?token={{ token }}" class="big_btn">Otključaj</a>
         <hr>
         <form class="inner_container" method="POST" action="/get_temporary_unlock_link">
             <button class="small_btn">Generiši privremeni link</button>
