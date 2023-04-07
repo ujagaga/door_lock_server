@@ -1,6 +1,7 @@
 import sys
 import settings
 import mysql.connector
+import time
 
 
 def open_db():
@@ -29,6 +30,9 @@ def init_database(connection, db_cursor):
     db_cursor.execute(sql)
 
     sql = "create table guests (email varchar(255), token varchar(32) UNIQUE, valid_until varchar(16))"
+    db_cursor.execute(sql)
+
+    sql = "create table nfc_codes (code varchar(32) UNIQUE, alias varchar(255), created_at varchar(16), email varchar(255))"
     db_cursor.execute(sql)
 
     connection.commit()
@@ -231,7 +235,74 @@ def get_guest(connection, db_cursor, token: str = None, email: str = None):
     return guest
 
 
-def cleanup_expired_links(connection, db_cursor, ):
+def delete_nfc_code(connection, db_cursor, code: str = None):
+    if code:
+        sql = f"DELETE FROM nfc_codes WHERE code = '{code}'"
+    else:
+        sql = f"DELETE FROM nfc_codes WHERE email IS NULL"
+
+    try:
+        db_cursor.execute(sql)
+        connection.commit()
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("ERROR removing nfc code from db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
+
+
+def add_nfc_code(connection, db_cursor, code: str):
+    # Delete unassigned codes
+    delete_nfc_code(connection, db_cursor)
+
+    created_at = int(time.time())
+    sql = f"INSERT INTO nfc_codes (code, created_at) VALUES ('{code}', '{created_at}')"
+
+    try:
+        db_cursor.execute(sql)
+        connection.commit()
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("ERROR adding nfc code to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
+
+
+def get_nfc_codes(connection, db_cursor, email: str = None, code: str = None):
+    one = True
+    if code:
+        sql = f"SELECT * FROM nfc_codes WHERE code = '{code}'"
+    elif email:
+        sql = f"SELECT * FROM nfc_codes WHERE email = '{email}' ORDER BY created_at ASC"
+        one = False
+    else:
+        sql = f"SELECT * FROM nfc_codes WHERE email IS NULL"
+
+    try:
+        db_cursor.execute(sql)
+        if one:
+            data = db_cursor.fetchone()
+            codes = {"code": data[0], "alias": data[1], "created_at": data[2], "email": data[3]}
+        else:
+            codes = []
+            for data in db_cursor.fetchall():
+                codes.append({"code": data[0], "alias": data[1]})
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print(f"ERROR reading nfc codes on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
+        codes = None
+
+    return codes
+
+
+def update_nfc_code(connection, db_cursor, code: str, email: str):
+    sql = "UPDATE nfc_codes SET email = '{}' WHERE code = '{}'".format(email, code)
+
+    try:
+        db_cursor.execute(sql)
+        connection.commit()
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("ERROR updating nfc code in db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
+
+
+def cleanup_expired_links(connection, db_cursor):
     sql = f"DELETE FROM guests WHERE valid_until < (NOW() - INTERVAL 1 DAY)"
     try:
         db_cursor.execute(sql)

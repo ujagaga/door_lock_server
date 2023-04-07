@@ -81,8 +81,48 @@
             {% endif %}
         </div>
 
+         <div class="inner_container">
+            {% if nfc_codes %}
+            <h2>Lista odobrenih kodova</h2>
+            <table>
+                {% for code in nfc_codes %}
+                    <tr>
+                        <td>
+                            {{ code.code }}
+                        </td>
+                        <td>
+                            {{ code.alias }}
+                        </td>
+                        <td>
+                            <p><a href="/delete_nfc_code?code={{ code.code }}&token={{ token }}" class="small_red_btn">X</a></p>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+            {% endif %}
         </div>
 
+        <div class="inner_container">
+            {% if new_code %}
+            <h2>Neregistrovan kod</h2>
+            <table>
+                <tr>
+                    <td>
+                        {{ new_code.code }}
+                    </td>
+                    <td>
+                        {{ new_code.alias }}
+                    </td>
+                    <td>
+                        <p><a href="/delete_nfc_code?code={{ code.code }}&token={{ token }}" class="small_red_btn">X</a></p>
+                    </td>
+                    <td>
+                        <p><a href="/update_nfc_code?code={{ code.code }}&token={{ token }}" class="small_green_btn">+</a></p>
+                    </td>
+                </tr>
+            </table>
+            {% endif %}
+        </div>
     </div>
 </body>
 <script src="static/index.js"></script>

@@ -74,6 +74,19 @@ body{
     height: 1em;
 }
 
+.small_green_btn{
+    color: white;
+    background-color: green;
+    display: inline-block;
+    padding: 5px;
+    border-radius: 50%;
+    text-decoration: none;
+    float: left;
+    margin: 5px;
+    width: 1em;
+    height: 1em;
+}
+
 .title_link{
     text-decoration: none;
     color: #BA4A00;

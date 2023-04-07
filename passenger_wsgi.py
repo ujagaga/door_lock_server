@@ -220,6 +220,10 @@ def index():
     database.cleanup_expired_links(g.connection, g.db_cursor)
 
     guest_links = database.get_guest(g.connection, g.db_cursor, email=user["email"])
+
+    assigned_nfc_codes = database.get_nfc_codes(g.connection, g.db_cursor, email=user["email"])
+    unassigned_nfc_code = database.get_nfc_codes(g.connection, g.db_cursor)
+
     start_date = helper.date_to_string(datetime.now())
     end_date = helper.date_to_string(datetime.now() + timedelta(days=7))
 
@@ -238,7 +242,9 @@ def index():
         guest_links=guest_links,
         start_date=start_date,
         end_date=end_date,
-        connected_devices=connected_devices
+        connected_devices=connected_devices,
+        nfc_codes=assigned_nfc_codes,
+        new_code=unassigned_nfc_code
     )
 
 
@@ -394,4 +400,56 @@ def delete_temporary_unlock_link():
     link_token = args.get("link_token")
 
     database.delete_guest(g.connection, g.db_cursor, token=link_token)
+    return redirect(url_for('index'))
+
+
+@application.route('/report_nfc_code', methods=['GET'])
+def report_nfc_code():
+    args = request.args
+    token = args.get("token")
+
+    if token:
+        code = args.get("code")
+        if code:
+            database.add_nfc_code(g.connection, g.db_cursor, code=code)
+            response = {"status": "OK"}
+        else:
+            response = {"status": "ERROR", "detail": "Missing code"}
+    else:
+        response = {"status": "ERROR", "detail": "Missing token"}
+
+    return jsonify(response)
+
+
+@application.route('/update_nfc_code', methods=['GET'])
+def update_nfc_code():
+    args = request.args
+    token = args.get("token")
+    user = database.get_user(g.connection, g.db_cursor, token=token)
+    if not user:
+        return redirect(url_for('login'))
+
+    code = args.get("code")
+    if code:
+        database.update_nfc_code(g.connection, g.db_cursor, code=code, email=user["email"])
+    else:
+        flash('Greška: neispravan NFC kod.')
+
+    return redirect(url_for('index'))
+
+
+@application.route('/delete_nfc_code', methods=['GET'])
+def delete_nfc_code():
+    args = request.args
+    token = args.get("token")
+    user = database.get_user(g.connection, g.db_cursor, token=token)
+    if not user:
+        return redirect(url_for('login'))
+
+    code = args.get("code")
+    if code:
+        database.update_nfc_code(g.connection, g.db_cursor, code=code, email=user["email"])
+    else:
+        flash('Greška: neispravan NFC kod.')
+
     return redirect(url_for('index'))
