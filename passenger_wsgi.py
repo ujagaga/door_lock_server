@@ -465,7 +465,7 @@ def device_get_nfc_codes():
 
             nfc_codes = database.get_nfc_codes(g.connection, g.db_cursor, start_id=start, max_num=max)
             codes = []
-            if codes:
+            if nfc_codes:
                 for code in nfc_codes:
                     codes.append(code["code"])
 
