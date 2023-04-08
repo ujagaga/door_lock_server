@@ -505,7 +505,7 @@ def authorize_nfc_code_post():
     if not user:
         return redirect(url_for('login'))
 
-    code = request.form.get('code')
+    code = request.form.get('nfc_code')
     print(f"**** code --{code}--")
     if code:
 
