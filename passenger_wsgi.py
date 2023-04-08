@@ -533,7 +533,7 @@ def delete_nfc_code():
     args = request.args
     code = args.get("code")
     if code:
-        database.update_nfc_code(g.connection, g.db_cursor, code=code, email=user["email"])
+        database.delete_nfc_code(g.connection, g.db_cursor, code=code)
     else:
         flash('Greška: neispravan NFC kod.')
 
