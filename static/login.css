@@ -13,13 +13,14 @@ input{
     margin: 5px;
     outline: none;
     padding: 0;
-    color: #e7d7c3;
-    background: None;
+}
+
+.control{
+    color: black;
 }
 
 .disabled{
-    background: #e7d7c3;
-    color: black;
+    color: #e7d7c3;
 }
 
 button{
