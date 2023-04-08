@@ -46,8 +46,8 @@ def check_table_exists(connection, db_cursor, tablename):
     return False
 
 
-def add_user(connection, db_cursor, email: str, password: str = None):
-    sql = f"INSERT INTO users(email, password) VALUES ('{email}', '{password}')"
+def add_user(connection, db_cursor, email: str, password: str = None, role: str = ""):
+    sql = f"INSERT INTO users(email, password, role) VALUES ('{email}', '{password}', '{role}')"
 
     try:
         db_cursor.execute(sql)

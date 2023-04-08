@@ -45,10 +45,16 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--password", help="Password", required=False)
     parser.add_argument("-e", "--email", help="E-mail", required=False)
+    parser.add_argument("-a", "--admin", help="Set admin role", required=False, action='store_true', default=False)
     parser.add_argument("-o", "--operation", help="Operation", required=True,
                         choices=['add', 'delete', 'modify', 'list'])
 
     args = parser.parse_args()
+
+    if args.admin:
+        role = "admin"
+    else:
+        role = ""
 
     connection, db_cursor = database.open_db()
     if not database.check_table_exists(connection, db_cursor, "users"):
@@ -76,7 +82,9 @@ if __name__ == '__main__':
             f"\n\tpassword: {args.password}"            
             )
 
-        database.add_user(connection, db_cursor, email=args.email, password=helper.hash_password(args.password))
+        database.add_user(
+            connection, db_cursor, email=args.email, password=helper.hash_password(args.password), role=role
+        )
         print("Checking result:")
         list_users(connection, db_cursor, email=args.email)
 
@@ -100,7 +108,9 @@ if __name__ == '__main__':
         validate_password(args.password)
 
         print(f"INFO: Modifying user: {args.email}")
-        database.update_user(connection, db_cursor, email=args.email, password=helper.hash_password(args.password))
+        database.update_user(
+            connection, db_cursor, email=args.email, password=helper.hash_password(args.password), role=role
+        )
 
         print("Checking result:")
         list_users(connection, db_cursor, email=args.email)
