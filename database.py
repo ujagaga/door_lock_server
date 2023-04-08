@@ -266,16 +266,15 @@ def delete_nfc_code(connection, db_cursor, code: str = None):
 
 
 def get_nfc_codes(connection, db_cursor, email: str = None, code: str = None, start_id: int = None, max_num: int = 10):
-    one = True
+    one = False
     if code:
         sql = f"SELECT * FROM nfc_codes WHERE code = '{code}'"
+        one = True
     elif email:
         sql = f"SELECT * FROM nfc_codes WHERE email = '{email}' ORDER BY created_at ASC"
-        one = False
     elif start_id:
         sql = f"SELECT * FROM nfc_codes WHERE email IS NOT NULL ORDER BY created_at ASC " \
               f"LIMIT {start_id}, {start_id + max_num}"
-        one = False
     else:
         sql = f"SELECT * FROM nfc_codes WHERE email IS NULL"
 
