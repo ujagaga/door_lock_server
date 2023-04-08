@@ -301,7 +301,7 @@ def get_nfc_codes(connection, db_cursor, email: str = None, code: str = None, st
 
 
 def update_nfc_code(connection, db_cursor, code: str, email: str = None, last_used: str = None, alias: str = None):
-    nfc_code = get_nfc_codes(connection, db_cursor, code)
+    nfc_code = get_nfc_codes(connection, db_cursor, code=code)
 
     if email:
         nfc_code["email"] = email
