@@ -74,16 +74,16 @@ body{
     height: 1em;
 }
 
-.small_green_btn{
+.green_btn{
     color: white;
     background-color: green;
     display: inline-block;
     padding: 5px;
-    border-radius: 50%;
+    border-radius: 5px;
     text-decoration: none;
-    float: left;
+    float: right;
     margin: 5px;
-    width: 1em;
+    width: 10em;
     height: 1em;
 }
 

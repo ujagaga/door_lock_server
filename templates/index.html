@@ -113,10 +113,7 @@
                         {{ code.code }}
                     </td>
                     <td>
-                        {{ code.alias }}
-                    </td>
-                    <td>
-                        <p><a href="/update_nfc_code?code={{ code.code }}" class="small_green_btn">+</a></p>
+                        <p><a href="/authorize_nfc_code?code={{ code.code }}" class="green_btn">Registruj</a></p>
                     </td>
                 </tr>
                 {% endfor %}
