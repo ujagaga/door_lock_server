@@ -15,12 +15,8 @@ input{
     padding: 0;
 }
 
-.control{
-    color: black;
-}
-
 .disabled{
-    color: #e7d7c3;
+    opacity: 0.7;
 }
 
 button{
