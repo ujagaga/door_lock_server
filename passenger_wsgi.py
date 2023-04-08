@@ -463,8 +463,9 @@ def device_get_nfc_codes():
 
         nfc_codes = database.get_nfc_codes(g.connection, g.db_cursor, start_id=start, max_num=max)
         codes = []
-        for code in nfc_codes:
-            codes.append(code["code"])
+        if codes:
+            for code in nfc_codes:
+                codes.append(code["code"])
 
         response = {"status": "OK", "codes": codes}
 
