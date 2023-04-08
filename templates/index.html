@@ -105,18 +105,21 @@
         <div class="inner_container">
             {% if new_code %}
             <h2>Neregistrovan kod</h2>
+
             <table>
+                {% for code in new_code %}
                 <tr>
                     <td>
-                        {{ new_code.code }}
+                        {{ code.code }}
                     </td>
                     <td>
-                        {{ new_code.alias }}
+                        {{ code.alias }}
                     </td>
                     <td>
                         <p><a href="/update_nfc_code?code={{ code.code }}" class="small_green_btn">+</a></p>
                     </td>
                 </tr>
+                {% endfor %}
             </table>
             {% endif %}
         </div>
