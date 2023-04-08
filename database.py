@@ -84,8 +84,10 @@ def get_user(connection, db_cursor, email: str = None, token: str = None):
             user = {"email": data[0], "password": data[1], "token": data[2], "role": data[3]}
         else:
             user = []
-            for data in db_cursor.fetchall():
-                user.append({"email": data[0], "password": data[1], "token": data[2], "role": data[3]})
+            raw_data = db_cursor.fetchall()
+            if raw_data:
+                for data in raw_data:
+                    user.append({"email": data[0], "password": data[1], "token": data[2], "role": data[3]})
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print(f"ERROR reading data on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
@@ -155,8 +157,10 @@ def get_device(connection, db_cursor, name: str = None, token: str = None):
             device = {"name": data[0], "password": data[1], "data": data[2], "token": data[3]}
         else:
             device = []
-            for data in db_cursor.fetchall():
-                device.append({"name": data[0], "password": data[1], "data": data[2], "token": data[3]})
+            raw_data = db_cursor.fetchall()
+            if raw_data:
+                for data in raw_data:
+                    device.append({"name": data[0], "password": data[1], "data": data[2], "token": data[3]})
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print(f"ERROR reading data on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
@@ -226,8 +230,10 @@ def get_guest(connection, db_cursor, token: str = None, email: str = None):
             guest = {"email": data[0], "token": data[1], "valid_until": data[2]}
         else:
             guest = []
-            for data in db_cursor.fetchall():
-                guest.append({"email": data[0], "token": data[1], "valid_until": data[2]})
+            raw_data = db_cursor.fetchall()
+            if raw_data:
+                for data in raw_data:
+                    guest.append({"email": data[0], "token": data[1], "valid_until": data[2]})
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print(f"ERROR reading data on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
@@ -271,8 +277,10 @@ def get_nfc_codes(connection, db_cursor, email: str = None, code: str = None, st
             codes = {"code": data[0], "alias": data[1], "created_at": data[2], "email": data[3], "last_used": data[4]}
         else:
             codes = []
-            for data in db_cursor.fetchall():
-                codes.append({"code": data[0], "alias": data[1], "last_used": data[4]})
+            raw_data = db_cursor.fetchall()
+            if raw_data:
+                for data in raw_data:
+                    codes.append({"code": data[0], "alias": data[1], "last_used": data[4]})
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print(f"ERROR reading nfc codes on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
