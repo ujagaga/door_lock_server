@@ -492,7 +492,7 @@ def authorize_nfc_code():
     args = request.args
     code = args.get("code")
 
-    return render_template('authorize_nfc_code', token=token, code=code)
+    return render_template('authorize_nfc_code.html', token=token, code=code)
 
 
 @application.route('/authorize_nfc_code', methods=['POST'])
