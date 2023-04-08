@@ -448,26 +448,30 @@ def device_get_nfc_codes():
     token = args.get("token")
 
     if token:
-        start_from = args.get("start")
-        max_count = args.get("max")
+        device = database.get_device(token=token)
+        if device:
+            start_from = args.get("start")
+            max_count = args.get("max")
 
-        if start_from:
-            start = int(start_from)
+            if start_from:
+                start = int(start_from)
+            else:
+                start = 0
+
+            if max_count:
+                max = int(max_count)
+            else:
+                max = 10
+
+            nfc_codes = database.get_nfc_codes(g.connection, g.db_cursor, start_id=start, max_num=max)
+            codes = []
+            if codes:
+                for code in nfc_codes:
+                    codes.append(code["code"])
+
+            response = {"status": "OK", "codes": codes}
         else:
-            start = 0
-
-        if max_count:
-            max = int(max_count)
-        else:
-            max = 10
-
-        nfc_codes = database.get_nfc_codes(g.connection, g.db_cursor, start_id=start, max_num=max)
-        codes = []
-        if codes:
-            for code in nfc_codes:
-                codes.append(code["code"])
-
-        response = {"status": "OK", "codes": codes}
+            response = {"status": "ERROR", "detail": "Unauthorized"}
 
     else:
         response = {"status": "ERROR", "detail": "Missing token"}
