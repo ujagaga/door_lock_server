@@ -343,7 +343,7 @@ def cleanup_expired_links(connection, db_cursor):
 
 
 def cleanup_unused_nfc_codes(connection, db_cursor):
-    sql = f"DELETE FROM nfc_codes WHERE last_used < (NOW() - INTERVAL 6 MONTH)"
+    sql = f"DELETE FROM nfc_codes WHERE email IS NOT NULL AND last_used IS NOT NULL AND last_used < (NOW() - INTERVAL 6 MONTH)"
     try:
         db_cursor.execute(sql)
         connection.commit()
