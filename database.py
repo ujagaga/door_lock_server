@@ -81,7 +81,10 @@ def get_user(connection, db_cursor, email: str = None, token: str = None):
         db_cursor.execute(sql)
         if one:
             data = db_cursor.fetchone()
-            user = {"email": data[0], "password": data[1], "token": data[2], "role": data[3]}
+            if data:
+                user = {"email": data[0], "password": data[1], "token": data[2], "role": data[3]}
+            else:
+                user = None
         else:
             user = []
             raw_data = db_cursor.fetchall()
@@ -154,7 +157,10 @@ def get_device(connection, db_cursor, name: str = None, token: str = None):
         db_cursor.execute(sql)
         if one:
             data = db_cursor.fetchone()
-            device = {"name": data[0], "password": data[1], "data": data[2], "token": data[3]}
+            if data:
+                device = {"name": data[0], "password": data[1], "data": data[2], "token": data[3]}
+            else:
+                device = None
         else:
             device = []
             raw_data = db_cursor.fetchall()
@@ -227,7 +233,10 @@ def get_guest(connection, db_cursor, token: str = None, email: str = None):
         db_cursor.execute(sql)
         if one:
             data = db_cursor.fetchone()
-            guest = {"email": data[0], "token": data[1], "valid_until": data[2]}
+            if data:
+                guest = {"email": data[0], "token": data[1], "valid_until": data[2]}
+            else:
+                guest = None
         else:
             guest = []
             raw_data = db_cursor.fetchall()
@@ -274,7 +283,10 @@ def get_nfc_codes(connection, db_cursor, email: str = None, code: str = None, st
         db_cursor.execute(sql)
         if one:
             data = db_cursor.fetchone()
-            codes = {"code": data[0], "alias": data[1], "created_at": data[2], "email": data[3], "last_used": data[4]}
+            if data:
+                codes = {"code": data[0], "alias": data[1], "created_at": data[2], "email": data[3], "last_used": data[4]}
+            else:
+                codes = None
         else:
             codes = []
             raw_data = db_cursor.fetchall()
