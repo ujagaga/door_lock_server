@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VM120 NS Login</title>
+    <title>VM120 NS Kod Za Otključavanje</title>
     <link rel="icon" type="image/x-icon" href="static/favicon.ico">
     <link rel="stylesheet" href="static/login.css"/>
 </head>
 <body>
 <div class="box">
-    <form method="POST" action="/login">
+    <h1>Prisvojite kod</h1>
+    <form method="POST" action="/authorize_nfc_code">
+        <input type="hidden" name="token" value="{{ token }}">
         {% with messages = get_flashed_messages() %}
         {% if messages %}
             <p class="red_notification">
@@ -19,17 +21,14 @@
         {% endwith %}
         <div>
             <div class="control">
-                <input type="text" name="email" placeholder="Vaša e-mail adresa" autofocus="">
+                <input type="text" name="code" placeholder="{{ code }}" readonly>
+            </div>
+            <div class="control">
+                <input type="text" name="alias" placeholder="Naziv" autofocus="">
             </div>
         </div>
 
-        <div>
-            <div class="control">
-                <input type="password" name="password" placeholder="Vaša lozinka">
-            </div>
-        </div>
-        <a class="standalone_link clearfix" href="/reset_password">Zaboravljena lozinka? Resetujte je.</a>
-        <button class="full-width">Prijavi se</button>
+        <button class="full-width">Primeni</button>
     </form>
 </div>
 </body>

@@ -407,8 +407,8 @@ def delete_temporary_unlock_link():
     return redirect(url_for('index'))
 
 
-@application.route('/report_nfc_code', methods=['GET'])
-def report_nfc_code():
+@application.route('/device_report_nfc_code', methods=['GET'])
+def device_report_nfc_code():
     args = request.args
     token = args.get("token")
 
@@ -438,16 +438,70 @@ def report_nfc_code():
     return jsonify(response)
 
 
-@application.route('/update_nfc_code', methods=['GET'])
-def update_nfc_code():
+@application.route('/device_get_nfc_codes', methods=['GET'])
+def device_get_nfc_codes():
     args = request.args
     token = args.get("token")
+
+    if token:
+        start_from = args.get("start")
+        max_count = args.get("max")
+
+        if start_from:
+            start = int(start_from)
+        else:
+            start = 0
+
+        if max_count:
+            max = int(max_count)
+        else:
+            max = 10
+
+        nfc_codes = database.get_nfc_codes(g.connection, g.db_cursor, start_id=start, max_num=max)
+        codes = []
+        for code in nfc_codes:
+            codes.append(code["code"])
+
+        response = {"status": "OK", "codes": codes}
+
+    else:
+        response = {"status": "ERROR", "detail": "Missing token"}
+
+    return jsonify(response)
+
+
+@application.route('/authorize_nfc_code', methods=['GET'])
+def authorize_nfc_code():
+    token = request.cookies.get('token')
+    if not token:
+        return redirect(url_for('login'))
+
     user = database.get_user(g.connection, g.db_cursor, token=token)
     if not user:
         return redirect(url_for('login'))
 
+    args = request.args
     code = args.get("code")
+
+    return render_template('authorize_nfc_code', token=token, code=code)
+
+
+@application.route('/authorize_nfc_code', methods=['POST'])
+def authorize_nfc_code_post():
+    token = request.cookies.get('token')
+    if not token:
+        return redirect(url_for('login'))
+
+    user = database.get_user(g.connection, g.db_cursor, token=token)
+    if not user:
+        return redirect(url_for('login'))
+
+    code = request.form.get('code')
     if code:
+        alias = request.form.get('alias')
+        if not alias or len(alias) < 3:
+            return redirect(url_for('authorize_nfc_code', token=token, code=code))
+
         database.update_nfc_code(g.connection, g.db_cursor, code=code, email=user["email"])
 
         database.cleanup_unused_nfc_codes(g.connection, g.db_cursor)
@@ -459,12 +513,15 @@ def update_nfc_code():
 
 @application.route('/delete_nfc_code', methods=['GET'])
 def delete_nfc_code():
-    args = request.args
-    token = args.get("token")
+    token = request.cookies.get('token')
+    if not token:
+        return redirect(url_for('login'))
+
     user = database.get_user(g.connection, g.db_cursor, token=token)
     if not user:
         return redirect(url_for('login'))
 
+    args = request.args
     code = args.get("code")
     if code:
         database.update_nfc_code(g.connection, g.db_cursor, code=code, email=user["email"])
@@ -472,3 +529,5 @@ def delete_nfc_code():
         flash('Greška: neispravan NFC kod.')
 
     return redirect(url_for('index'))
+
+

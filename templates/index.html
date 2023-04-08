@@ -94,7 +94,7 @@
                             {{ code.alias }}
                         </td>
                         <td>
-                            <p><a href="/delete_nfc_code?code={{ code.code }}&token={{ token }}" class="small_red_btn">X</a></p>
+                            <p><a href="/delete_nfc_code?code={{ code.code }}" class="small_red_btn">X</a></p>
                         </td>
                     </tr>
                 {% endfor %}
@@ -114,10 +114,7 @@
                         {{ new_code.alias }}
                     </td>
                     <td>
-                        <p><a href="/delete_nfc_code?code={{ code.code }}&token={{ token }}" class="small_red_btn">X</a></p>
-                    </td>
-                    <td>
-                        <p><a href="/update_nfc_code?code={{ code.code }}&token={{ token }}" class="small_green_btn">+</a></p>
+                        <p><a href="/update_nfc_code?code={{ code.code }}" class="small_green_btn">+</a></p>
                     </td>
                 </tr>
             </table>
