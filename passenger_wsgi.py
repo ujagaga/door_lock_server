@@ -245,7 +245,8 @@ def index():
     devices = database.get_device(g.connection, g.db_cursor)
     if devices:
         for device in devices:
-            device_data = json.loads(device["data"])
+
+            device_data = json.loads(device.get("data", ""))
             ping_time = device_data.get("ping_time", 0)
             dev_connected = (time.time() - ping_time) < (settings.LIFESIGN_TIMEOUT * 1.5)
             connected_devices.append({"name": device["name"], "connected": dev_connected})
