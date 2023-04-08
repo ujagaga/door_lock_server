@@ -22,7 +22,7 @@ def close_db(connection, db_cursor):
 def init_database(connection, db_cursor):
     print("Creating tables...")
 
-    sql = "create table users (email varchar(255) NOT NULL UNIQUE, password varchar(255) NOT NULL, token varchar(32) UNIQUE)"
+    sql = "create table users (email varchar(255) NOT NULL UNIQUE, password varchar(255) NOT NULL, token varchar(32) UNIQUE, role varchar(5))"
     db_cursor.execute(sql)
 
     sql = "create table devices (name varchar(255) NOT NULL UNIQUE, password varchar(255) NOT NULL, data varchar(512), token varchar(32) UNIQUE)"
@@ -81,11 +81,11 @@ def get_user(connection, db_cursor, email: str = None, token: str = None):
         db_cursor.execute(sql)
         if one:
             data = db_cursor.fetchone()
-            user = {"email": data[0], "password": data[1], "token": data[2]}
+            user = {"email": data[0], "password": data[1], "token": data[2], "role": data[3]}
         else:
             user = []
             for data in db_cursor.fetchall():
-                user.append({"email": data[0], "password": data[1], "token": data[2]})
+                user.append({"email": data[0], "password": data[1], "token": data[2], "role": data[3]})
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print(f"ERROR reading data on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
@@ -94,17 +94,19 @@ def get_user(connection, db_cursor, email: str = None, token: str = None):
     return user
 
 
-def update_user(connection, db_cursor, email: str, token: str = None, password: str = None):
+def update_user(connection, db_cursor, email: str, token: str = None, password: str = None, role: str = None):
     user = get_user(connection, db_cursor, email=email)
 
     if user:
-        if token is not None:
+        if token:
             user["token"] = token
         if password:
             user["password"] = password
+        if role:
+            user["role"] = role
 
-        sql = "UPDATE users SET token = '{}', password = '{}' WHERE email = '{}'" \
-              "".format(user["token"], user["password"], email)
+        sql = "UPDATE users SET token = '{}', password = '{}', role = '{}' WHERE email = '{}'" \
+              "".format(user["token"], user["password"], user["role"], email)
 
         try:
             db_cursor.execute(sql)
