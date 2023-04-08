@@ -9,8 +9,8 @@
 </head>
 <body>
 <div class="box">
-    <h1>Prisvojite kod</h1>
     <form method="POST" action="/authorize_nfc_code">
+        <h1>Prisvojite kod</h1>
         <input type="hidden" name="token" value="{{ token }}">
         {% with messages = get_flashed_messages() %}
         {% if messages %}
@@ -20,7 +20,7 @@
         {% endif %}
         {% endwith %}
         <div>
-            <div class="control">
+            <div class="control disabled">
                 <input type="text" name="code" placeholder="{{ code }}" readonly>
             </div>
             <div class="control">
