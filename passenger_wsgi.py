@@ -506,7 +506,9 @@ def authorize_nfc_code_post():
         return redirect(url_for('login'))
 
     code = request.form.get('code')
+    print(f"**** code --{code}--")
     if code:
+
         alias = request.form.get('alias')
         if not alias or len(alias) < 3:
             return redirect(url_for('authorize_nfc_code', token=token, code=code))
