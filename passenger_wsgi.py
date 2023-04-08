@@ -511,7 +511,7 @@ def authorize_nfc_code_post():
         if not alias or len(alias) < 3:
             return redirect(url_for('authorize_nfc_code', token=token, code=code))
 
-        database.update_nfc_code(g.connection, g.db_cursor, code=code, email=user["email"])
+        database.update_nfc_code(g.connection, g.db_cursor, code=code, email=user["email"], alias=alias)
 
         database.cleanup_unused_nfc_codes(g.connection, g.db_cursor)
     else:

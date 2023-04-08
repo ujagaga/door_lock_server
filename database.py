@@ -300,13 +300,18 @@ def get_nfc_codes(connection, db_cursor, email: str = None, code: str = None, st
     return codes
 
 
-def update_nfc_code(connection, db_cursor, code: str, email: str = None, last_used: str = None):
+def update_nfc_code(connection, db_cursor, code: str, email: str = None, last_used: str = None, alias: str = None):
+    nfc_code = get_nfc_codes(connection, db_cursor, code)
+
     if email:
-        sql = f"UPDATE nfc_codes SET email = '{email}' WHERE code = '{code}'"
-    elif last_used:
-        sql = f"UPDATE nfc_codes SET last_used = '{last_used}' WHERE code = '{code}'"
-    else:
-        print("ERROR: No parameter to update NFC supplied.")
+        nfc_code["email"] = email
+    if alias:
+        nfc_code["alias"] = alias
+    if last_used:
+        nfc_code["last_used"] = last_used
+
+    sql = "UPDATE nfc_codes SET email = '{}', last_used = '{}', alias = '{}' WHERE code = '{}'" \
+          "".format(nfc_code["email"], nfc_code["last_used"], nfc_code["alias"], code)
 
     try:
         db_cursor.execute(sql)
