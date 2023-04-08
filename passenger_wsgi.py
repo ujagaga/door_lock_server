@@ -49,6 +49,20 @@ def mqtt_publish(topic: str, data: str):
     publish_result.wait_for_publish()
 
 
+def perform_unlock():
+    devices = database.get_device(g.connection, g.db_cursor)
+    if devices:
+        mqtt_connect()
+        for device in devices:
+            if device["data"]:
+                device_data = json.loads(device["data"])
+                topic = device_data.get("topic", "")
+                trigger = device_data.get("trigger", "")
+
+                mqtt_publish(topic=topic, data=trigger)
+        mqtt_disconnect()
+
+
 @application.before_request
 def before_request():
     g.connection, g.db_cursor = database.open_db()
@@ -277,17 +291,7 @@ def unlock():
     if not token:
         abort(404)
 
-    devices = database.get_device(g.connection, g.db_cursor)
-    if devices:
-        mqtt_connect()
-        for device in devices:
-            if device["data"]:
-                device_data = json.loads(device["data"])
-                topic = device_data.get("topic", "")
-                trigger = device_data.get("trigger", "")
-
-                mqtt_publish(topic=topic, data=trigger)
-        mqtt_disconnect()
+    perform_unlock()
 
     return render_template('unlock.html')
 
@@ -411,7 +415,20 @@ def report_nfc_code():
     if token:
         code = args.get("code")
         if code:
-            database.add_nfc_code(g.connection, g.db_cursor, code=code)
+            # Delete unassigned codes
+            database.delete_nfc_code(g.connection, g.db_cursor)
+
+            timestamp = helper.date_to_string(datetime.today())
+
+            existing_code = database.get_nfc_codes(g.connection, g.db_cursor, timestamp, code=code)
+            if existing_code:
+                database.update_nfc_code(g.connection, g.db_cursor, code=code, last_used=timestamp)
+
+                if existing_code["email"] is not None:
+                    perform_unlock()
+            else:
+                database.add_nfc_code(g.connection, g.db_cursor, code=code)
+
             response = {"status": "OK"}
         else:
             response = {"status": "ERROR", "detail": "Missing code"}
@@ -432,6 +449,8 @@ def update_nfc_code():
     code = args.get("code")
     if code:
         database.update_nfc_code(g.connection, g.db_cursor, code=code, email=user["email"])
+
+        database.cleanup_unused_nfc_codes(g.connection, g.db_cursor)
     else:
         flash('Greška: neispravan NFC kod.')
 
