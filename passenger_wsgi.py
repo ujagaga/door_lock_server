@@ -448,7 +448,7 @@ def device_get_nfc_codes():
     token = args.get("token")
 
     if token:
-        device = database.get_device(token=token)
+        device = database.get_device(g.connection, g.db_cursor, token=token)
         if device:
             start_from = args.get("start")
             max_count = args.get("max")
