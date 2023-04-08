@@ -431,7 +431,7 @@ def device_report_nfc_code():
                 if existing_code["email"] is not None:
                     perform_unlock()
             else:
-                database.add_nfc_code(g.connection, g.db_cursor, code=code)
+                database.add_nfc_code(g.connection, g.db_cursor, timestamp=timestamp, code=code)
 
             response = {"status": "OK"}
         else:
