@@ -57,7 +57,7 @@ if __name__ == '__main__':
         database.init_database(connection, db_cursor)
 
     if args.operation == 'list':
-        list_users()
+        list_users(connection, db_cursor)
 
     elif args.operation == 'add':
         if not args.password or not args.email:
