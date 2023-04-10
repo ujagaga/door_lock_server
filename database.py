@@ -148,7 +148,10 @@ def get_device(connection, db_cursor, name: str = None, token: str = None):
         db_cursor.execute(sql)
         if one:
             data = db_cursor.fetchone()
-            device = {"name": data[0], "password": data[1], "data": data[2], "token": data[3]}
+            if data:
+                device = {"name": data[0], "password": data[1], "data": data[2], "token": data[3]}
+            else:
+                device = None
         else:
             device = []
             for data in db_cursor.fetchall():
