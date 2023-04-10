@@ -19,6 +19,7 @@ body{
     padding: 0;
     text-align: center;
     max-width: 600px;
+    min-height: 100vh;
 }
 
 .big_btn{
@@ -121,7 +122,9 @@ td:nth-child(2), th:nth-child(2) {
 }
 
 .to-bottom{
-    margin: auto auto auto 0;
+    position: absolute;
+    bottom: 0;
+    background-color: #e7d7c3;
 }
 
 h1{
