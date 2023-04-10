@@ -19,7 +19,7 @@ def list_users(connection, db_cursor, email: str = None):
             print("\tINFO: No user found with specified e-mail!")
     else:
         print(f'{message}:')
-        if len(users) == 0:
+        if not users or len(users) == 0:
             print("\tINFO: No users found in database.")
         else:
             for user_obj in users:
