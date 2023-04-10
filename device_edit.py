@@ -47,7 +47,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     connection, db_cursor = database.open_db()
-    if not database.check_table_exists(connection, db_cursor, "devices"):
+    table_exists = database.check_table_exists(connection, db_cursor, "devices")
+    if table_exists:
         database.init_database(connection, db_cursor)
 
     if args.operation == 'list':
