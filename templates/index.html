@@ -12,10 +12,6 @@
 </head>
 <body>
     <div class="container">
-        <div class="navbar">
-            <a href="/logout" class="nav_btn">Odjavi se</a>
-        </div>
-
         <h1>Laze Telečkog 19</h1>
 
         {% with messages = get_flashed_messages() %}
@@ -62,8 +58,8 @@
             </table>
             {% endif %}
         </div>
-
-        <div class="inner_container">
+        <hr>
+        <div class="inner_container to-bottom">
             {% if connected_devices %}
             <h2>Lista konektovanih brava</h2>
             <table>
