@@ -123,3 +123,10 @@ td:nth-child(2), th:nth-child(2) {
 .to-bottom{
     margin: auto auto auto 0;
 }
+
+h1{
+    padding: 0.2em;
+    margin: 0;
+    height: 2.4em;
+    font-size: 2em;
+}
