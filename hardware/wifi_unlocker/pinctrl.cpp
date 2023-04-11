@@ -19,9 +19,19 @@ void PINCTRL_trigger(void){
   triggerTime = millis();
 }
 
+bool PINCTRL_reset_requested(void){
+  return (digitalRead(WIFI_RESET_PIN) == LOW);
+}
+
 
 void PINCTRL_init(void){
   pinMode(SWITCH_PIN, OUTPUT);
-  digitalWrite(SWITCH_PIN, LOW);
+  digitalWrite(SWITCH_PIN, HIGH);
+
+  pinMode(ADDITIONAL_GND, OUTPUT);
+  digitalWrite(ADDITIONAL_GND, LOW);
+
+  pinMode(WIFI_RESET_PIN, INPUT_PULLUP);
+  
   triggerTime = 0;
 }

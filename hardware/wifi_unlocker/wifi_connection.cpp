@@ -9,6 +9,7 @@
 #include <EEPROM.h>
 #include "web_socket.h"
 #include "config.h"
+#include "pinctrl.h"
 
 
 static char myApName[32] = {0};    /* Array to form AP name based on read MAC */
@@ -57,6 +58,8 @@ String WIFIC_getApList(void){
 
 /* Initiates a local AP */
 void WIFIC_APMode(void){ 
+  Serial.println("accessPointMode");
+  
   String wifi_statusMessage;
   
   if(String(st_ssid).length() > 2){   
@@ -65,9 +68,8 @@ void WIFIC_APMode(void){
   }else{
     wifi_statusMessage = "No access point is configured to connect to";    
   }  
-     
+  
   Serial.println("\n" + wifi_statusMessage);
-
   Serial.println("\nStarting AP");  
   WiFi.mode(WIFI_AP);  
   WiFi.begin();
@@ -110,7 +112,6 @@ void WIFIC_stationMode(void){
     
     Serial.println(wifi_statusMessage);
   }else{    
-    Serial.println("accessPointMode");
     WIFIC_APMode(); 
   } 
 }
@@ -188,7 +189,11 @@ void WIFIC_init(void){
   mac.replace(":", "");
   String ApName = AP_NAME_PREFIX + mac;
   ApName.toCharArray(myApName, ApName.length() + 1);
-  
-  WIFIC_stationMode();   
+
+  if(PINCTRL_reset_requested()){    
+    WIFIC_APMode(); 
+  }else{
+    WIFIC_stationMode();
+  }  
   
 }
