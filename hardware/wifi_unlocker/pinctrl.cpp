@@ -6,9 +6,9 @@ static unsigned long triggerTime = 0;
 void PINCTRL_process(void){
   if(triggerTime > 0){
     if((millis() - triggerTime) < (UNLOCK_DURATION * 1000)){
-      digitalWrite(SWITCH_PIN, HIGH);
-    }else{
       digitalWrite(SWITCH_PIN, LOW);
+    }else{
+      digitalWrite(SWITCH_PIN, HIGH);
       triggerTime = 0;
     }
   }  
