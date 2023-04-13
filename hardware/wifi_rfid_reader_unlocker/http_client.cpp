@@ -55,6 +55,25 @@ void HTTPC_confirmLifesign(void){
   http.end();  
 }
 
+void HTTPC_reportCode(String code){  
+  String serverPath = String(LOCK_SERVER_URL) + "/report_code?token=" + String(token) + "&code=" + code;
+  http.begin(client, serverPath.c_str());
+
+  int httpResponseCode = http.GET();
+  if (httpResponseCode > 0) { 
+    String payload = http.getString();
+    if(payload.indexOf("ERROR") > 0){
+      Serial.println("Code reporting error:" + payload);      
+    }
+  }
+  else {
+    Serial.print(serverPath + "\nError code: ");        
+    Serial.println(httpResponseCode);
+  }
+  // Free resources
+  http.end();  
+}
+
 void HTTPC_init(void){  
   String serverPath = String(LOCK_SERVER_URL) + "/device_login?name=" + DEV_NAME + "&password=" + DEV_PASSWORD;
   http.begin(client, serverPath.c_str());

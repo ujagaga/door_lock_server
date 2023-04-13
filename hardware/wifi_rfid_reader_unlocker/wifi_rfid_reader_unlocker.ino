@@ -13,6 +13,7 @@
 #include "config.h"
 #include "mqtt.h"
 #include "pinctrl.h"
+#include "rfid_reader.h"
 
 
 static String statusMessage = "";         /* This is set and requested from other modules. */
@@ -34,6 +35,7 @@ void setup(void) {
   WIFIC_init();
   HTTPS_init();
   WS_init();  
+  RFID_init();
 }
 
 
@@ -43,4 +45,5 @@ void loop(void) {
   HTTPC_process();
   MQTT_process();  
   PINCTRL_process();
+  RFID_process();
 }

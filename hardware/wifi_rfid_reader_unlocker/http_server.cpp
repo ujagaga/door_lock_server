@@ -14,8 +14,7 @@
 #include "wifi_connection.h"
 #include "web_socket.h"
 #include "config.h"
- #include "wifi_unlocker.h"
-// #include "pinctrl.h"
+#include "wifi_rfid_reader_unlocker.h"
 
 
 /* Declaring a web server object. */
