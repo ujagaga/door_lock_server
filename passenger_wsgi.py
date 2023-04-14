@@ -319,10 +319,10 @@ def reset_password_post():
 
         reset_link = f"{base_url}?token={token}"
 
-        mail_message = Message('Reset lozinke portala za otključavanje vrata', sender="do_not_reply@door_lock.lt19",
+        mail_message = Message('Reset lozinke portala za otključavanje vrata', sender="do_not_reply@vm120.in.rs",
                                recipients=[email])
-        mail_message.html = "<p>Da biste resetovali lozinku za pristup portalu za otključavanje vrata " \
-                            "u Laze Telečkog 19, kliknite <a href='{}'>ovde</a>.</p>".format(reset_link)
+        mail_message.html = "<p>Da biste resetovali lozinku za pristup portalu u Veselina Masleše 120, " \
+                            "kliknite <a href='{}'>ovde</a>.</p>".format(reset_link)
         mail.send(mail_message)
 
     return redirect(url_for('index'))

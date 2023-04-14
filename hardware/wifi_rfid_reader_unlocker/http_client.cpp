@@ -56,7 +56,7 @@ void HTTPC_confirmLifesign(void){
 }
 
 void HTTPC_reportCode(String code){  
-  String serverPath = String(LOCK_SERVER_URL) + "/report_code?token=" + String(token) + "&code=" + code;
+  String serverPath = String(LOCK_SERVER_URL) + "/device_report_nfc_code?token=" + String(token) + "&code=" + code;
   http.begin(client, serverPath.c_str());
 
   int httpResponseCode = http.GET();
