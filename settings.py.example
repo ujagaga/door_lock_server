@@ -11,3 +11,4 @@ MQTT_BROKER_URL = 'broker.emqx.io'
 MQTT_BROKER_PORT = 1883
 
 LIFESIGN_TIMEOUT = 120
+APP_SECRET_KEY = "S0meR@ndomSetOfCharactersToUseF0rEncrypt1on"

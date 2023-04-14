@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 application = Flask(__name__, static_url_path='/static', static_folder='static')
 
-application.config['SECRET_KEY'] = '9OLWxND4o83j4K4iuopOqwer13door'
+application.config['SECRET_KEY'] = settings.APP_SECRET_KEY
 application.config['SESSION_COOKIE_NAME'] = 'door_locker'
 
 application.config['MAIL_SERVER'] = settings.MAIL_SERVER
@@ -419,19 +419,21 @@ def device_report_nfc_code():
     if token:
         code = args.get("code")
         if code:
+            encrypted_code = helper.hash_code(code)
+
             # Delete unassigned codes
             database.delete_nfc_code(g.connection, g.db_cursor)
 
             timestamp = helper.date_to_string(datetime.today())
 
-            existing_code = database.get_nfc_codes(g.connection, g.db_cursor, timestamp, code=code)
+            existing_code = database.get_nfc_codes(g.connection, g.db_cursor, timestamp, code=encrypted_code)
             if existing_code:
-                database.update_nfc_code(g.connection, g.db_cursor, code=code, last_used=timestamp)
+                database.update_nfc_code(g.connection, g.db_cursor, code=encrypted_code, last_used=timestamp)
 
                 if existing_code["email"]:
                     perform_unlock()
             else:
-                database.add_nfc_code(g.connection, g.db_cursor, timestamp=timestamp, code=code.replace('"', ''))
+                database.add_nfc_code(g.connection, g.db_cursor, timestamp=timestamp, code=encrypted_code.replace('"', ''))
 
             response = {"status": "OK"}
         else:

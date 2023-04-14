@@ -57,12 +57,17 @@ The server will then mark the device as online.
 
 When you click the unlock button, the server will send the trigger string to all devices via MQTT.
 
+The device contains an rfid reader, so you can use 128KHz tags for unlocking. After login, 
+the latest unregistered code will be shown, so you can authorize it.
+All codes are stored encrypted, and can not be used for anything else but identification.
+
 ## Run locally
     export FLASK_APP=passenger_wsgi.py
     export FLASK_DEBUG=True
     flask run
     
 ## Change history
+14.04.2023. Added RFID support to hardware device. Added code support to website.
 
 22.03.2023. Finished hardware code for ESP8266.
 TODO: add language support.

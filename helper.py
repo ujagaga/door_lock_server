@@ -4,6 +4,7 @@ from hashlib import sha256
 import re
 from datetime import datetime
 import sys
+import settings
 
 
 DATE_FORMAT = "%Y-%m-%d"
@@ -15,6 +16,11 @@ def generate_token():
 
 def hash_password(password: str):
     return sha256(password.encode('utf-8')).hexdigest()
+
+
+def hash_code(code: str):
+    string_to_code = f"{settings.APP_SECRET_KEY}{code}"
+    return sha256(string_to_code.encode('utf-8')).hexdigest()
 
 
 def generate_random_string():
