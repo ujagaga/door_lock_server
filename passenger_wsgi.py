@@ -79,7 +79,7 @@ def logout():
     token = request.cookies.get('token')
     user = database.get_user(g.connection, g.db_cursor, token=token)
     if user:
-        database.update_user(g.connection, g.db_cursor, email=user["email"], token="")
+        database.update_user(g.connection, g.db_cursor, email=user["email"], token="INVALID")
 
     return redirect(url_for('index'))
 
