@@ -102,11 +102,9 @@
 
  	<div class="inner_container to-bottom">
             {% if attachments %}
-            <ul>
                 {% for attachment in attachments %}
-                <li><a href="static/attachments/{{ attachment }}">{{ attachment }}</a></li>
+                <a href="static/attachments/{{ attachment }}" target="_blank">{{ attachment }}</a></br>
                 {% endfor %}
-            </ul>
             {% endif %}
 
             {% if connected_devices %}
