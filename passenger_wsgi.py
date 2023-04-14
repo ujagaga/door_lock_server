@@ -254,6 +254,8 @@ def index():
             dev_connected = (time.time() - ping_time) < (settings.LIFESIGN_TIMEOUT * 1.5)
             connected_devices.append({"name": device["name"], "connected": dev_connected})
 
+    attachments = os.listdir("static/attachments")
+
     return render_template(
         'index.html',
         token=token,
@@ -262,7 +264,8 @@ def index():
         end_date=end_date,
         connected_devices=connected_devices,
         nfc_codes=assigned_nfc_codes,
-        new_code=unassigned_nfc_code
+        new_code=unassigned_nfc_code,
+        attachments=attachments,
     )
 
 

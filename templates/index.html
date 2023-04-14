@@ -58,28 +58,7 @@
             </table>
             {% endif %}
         </div>
-
-        <div class="inner_container">
-            {% if connected_devices %}
-            <h2>Lista konektovanih brava</h2>
-            <table>
-                {% for device in connected_devices %}
-                    <tr>
-                        <td>
-                            {{ device.name }}
-                        </td>
-                        <td>
-                            {% if device.connected %}
-                            <p class="semaphore green"></p>
-                            {% else %}
-                            <p class="semaphore red"></p>
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </table>
-            {% endif %}
-        </div>
+       
 
          <div class="inner_container">
             {% if nfc_codes %}
@@ -116,6 +95,35 @@
                         <p><a href="/authorize_nfc_code?code={{ code.code }}" class="green_btn">Registruj</a></p>
                     </td>
                 </tr>
+                {% endfor %}
+            </table>
+            {% endif %}
+        </div>
+
+ 	<div class="inner_container to-bottom">
+            {% if attachments %}
+            <ul>
+                {% for attachment in attachments %}
+                <li><a href="static/attachments/{{ attachment }}">{{ attachment }}</a></li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if connected_devices %}
+            <table>
+                {% for device in connected_devices %}
+                    <tr>
+                        <td>
+                            {{ device.name }}
+                        </td>
+                        <td>
+                            {% if device.connected %}
+                            <p class="semaphore green"></p>
+                            {% else %}
+                            <p class="semaphore red"></p>
+                            {% endif %}
+                        </td>
+                    </tr>
                 {% endfor %}
             </table>
             {% endif %}
