@@ -296,7 +296,7 @@ def index():
     attachments = os.listdir("static/attachments")
 
     if user["role"] == Role.ADMIN.value:
-        pending_users = database.get_user(role=Role.PENDING)
+        pending_users = database.get_user(g.connection, g.db_cursor, role=Role.PENDING)
     else:
         pending_users = None
 
