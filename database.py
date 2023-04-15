@@ -48,7 +48,6 @@ def check_table_exists(connection, db_cursor, tablename):
 
 def add_user(connection, db_cursor, email: str, password: str = None, role: str = "", details: str = ""):
     sql = f"INSERT INTO users(email, password, role, details) VALUES ('{email}', '{password}', '{role}', '{details}')"
-    print("SQL:", sql, flush=True)
     try:
         db_cursor.execute(sql)
         connection.commit()

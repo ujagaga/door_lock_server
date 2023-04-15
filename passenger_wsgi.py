@@ -133,7 +133,6 @@ def new_account_post():
         return redirect(url_for('new_account'))
 
     details = {'apartment': apartment}
-    print("DETAILS:", details)
     database.add_user(g.connection, g.db_cursor, email=email, details=json.dumps(details), role=Role.PENDING.value)
 
     administrators = database.get_user(g.connection, g.db_cursor, role="admin")
@@ -296,7 +295,7 @@ def index():
 
     attachments = os.listdir("static/attachments")
 
-    if user["role"] == Role.ADMIN:
+    if user["role"] == Role.ADMIN.value:
         pending_users = database.get_user(role=Role.PENDING)
     else:
         pending_users = None
