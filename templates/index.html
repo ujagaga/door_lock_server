@@ -100,7 +100,28 @@
             {% endif %}
         </div>
 
- 	<div class="inner_container to-bottom">
+        <div class="inner_container">
+            {% if pending_users %}
+            <h2>Lista nalofa na čekanju</h2>
+            <table>
+                {% for pending_user in pending_users %}
+                    <tr>
+                        <td>
+                            {{ pending_user.email }}
+                        </td>
+                        <td>
+                            {{ pending_user.details }}
+                        </td>
+                        <td>
+                            <p><a href="/approve_user?email={{ pending_user.email }}" class="green_btn">Odobri</a></p>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+            {% endif %}
+        </div>
+
+ 	    <div class="inner_container to-bottom">
             {% if attachments %}
                 {% for attachment in attachments %}
                 <a href="static/attachments/{{ attachment }}" target="_blank">{{ attachment }}</a></br>

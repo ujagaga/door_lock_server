@@ -12,6 +12,7 @@ import settings
 import database
 import helper
 import paho.mqtt.client as mqtt
+from constants import Role
 
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -99,6 +100,10 @@ def login_post():
         flash('Neispravna e-mail adresa ili lozinka.')
         return redirect(url_for('login'))
 
+    if user["role"] == Role.PENDING.value:
+        flash('Vaš korisnički nalog još nije odobren. Administrator će Vas kontaktirati čim bude u mogućnosti.')
+        return redirect(url_for('login'))
+
     encrypted_pass = helper.hash_password(password)
     if encrypted_pass != user["password"]:
         flash('Neispravno korisničko ime ili lozinka.')
@@ -109,6 +114,40 @@ def login_post():
 
     response = make_response(redirect(url_for('index')))
     response.set_cookie('token', token)
+    return response
+
+
+@application.route('/new_account', methods=['GET'])
+def new_account():
+    return render_template('new_account.html')
+
+
+@application.route('/new_account', methods=['POST'])
+def new_account_post():
+    email = request.form.get('email')
+    apartment = request.form.get('apartment')
+
+    user = database.get_user(g.connection, g.db_cursor, email=email)
+    if user:
+        flash('Korisnik sa tom e-mail adresom već postoji.')
+        return redirect(url_for('new_account'))
+
+    details = '{"apartment": {}}'.format(apartment)
+    database.add_user(g.connection, g.db_cursor, email=email, details=details, role=Role.PENDING.value)
+
+    administrators = helper.get_user(role="admin")
+    admin_mail_list = []
+    for admin in administrators:
+        admin_mail_list.append(admin["email"])
+
+    if len(admin_mail_list) > 0:
+        mail_message = Message('Prijavljen je novi nalog za portal u Veselina Masleše 120.', sender="do_not_reply@vm120.in.rs",
+                               recipients=admin_mail_list)
+        mail_message.html = f"<p>e-mail adresa: {email}</p><br><p>Broj stana: {apartment}</p>"
+        mail.send(mail_message)
+
+    flash('Vaš zahtev je prosleđen. Administrator će Vas kontaktirati u najkraćem mogućem roku.')
+    response = make_response(redirect(url_for('index')))
     return response
 
 
@@ -256,6 +295,11 @@ def index():
 
     attachments = os.listdir("static/attachments")
 
+    if user["role"] == Role.ADMIN:
+        pending_users = database.get_user(role=Role.PENDING)
+    else:
+        pending_users = None
+
     return render_template(
         'index.html',
         token=token,
@@ -266,6 +310,7 @@ def index():
         nfc_codes=assigned_nfc_codes,
         new_code=unassigned_nfc_code,
         attachments=attachments,
+        pending_users=pending_users
     )
 
 
@@ -548,3 +593,40 @@ def delete_nfc_code():
     return redirect(url_for('index'))
 
 
+@application.route('/approve_user', methods=['GET'])
+def approve_user():
+    token = request.cookies.get('token')
+    if not token:
+        return redirect(url_for('login'))
+
+    user = database.get_user(g.connection, g.db_cursor, token=token)
+    if not user:
+        return redirect(url_for('login'))
+
+    args = request.args
+    pending_user_email = args.get("email")
+    pending_user = database.get_user(g.connection, g.db_cursor, email=pending_user_email)
+
+    if pending_user:
+        if pending_user["role"] == Role.PENDING.value:
+
+            token = helper.generate_token()
+            database.update_user(g.connection, g.db_cursor, email=pending_user_email, role=Role.ACTIVE.value, token=token)
+
+            base_url = request.base_url.replace("approve_user", "set_password")
+
+            reset_link = f"{base_url}?token={token}"
+
+            mail_message = Message('Postavljanje lozinke portala za otključavanje vrata', sender="do_not_reply@vm120.in.rs",
+                                   recipients=[pending_user["email"]])
+            mail_message.html = "<p>Da biste postavili lozinku za pristup portalu u Veselina Masleše 120, " \
+                                "kliknite <a href='{}'>ovde</a>.</p>".format(reset_link)
+            mail.send(mail_message)
+
+            flash('INFO: Poslat je email korisniku radi aktivacije naloga.')
+        else:
+            flash('Greška: rola korisničnog naloga nije "PENDING".')
+    else:
+        flash(f'Greška: nepostojeći email {pending_user_email}.')
+
+    return redirect(url_for('index'))

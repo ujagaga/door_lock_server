@@ -5,6 +5,7 @@ import argparse
 import sys
 import database
 import helper
+from constants import Role
 
 
 def list_users(connection, db_cursor, email: str = None):
@@ -52,7 +53,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.admin:
-        role = "admin"
+        role = Role.ADMIN.value
     else:
         role = ""
 

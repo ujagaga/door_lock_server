@@ -22,7 +22,7 @@ def close_db(connection, db_cursor):
 def init_database(connection, db_cursor):
     print("Creating tables...")
 
-    sql = "create table users (email varchar(255) NOT NULL UNIQUE, password varchar(255) NOT NULL, token varchar(32) UNIQUE, role varchar(5))"
+    sql = "create table users (email varchar(255) NOT NULL UNIQUE, password varchar(255) NOT NULL, token varchar(32) UNIQUE, role varchar(5), details varchar(512))"
     db_cursor.execute(sql)
 
     sql = "create table devices (name varchar(255) NOT NULL UNIQUE, password varchar(255) NOT NULL, data varchar(512), token varchar(32) UNIQUE)"
@@ -46,8 +46,8 @@ def check_table_exists(connection, db_cursor, tablename):
     return False
 
 
-def add_user(connection, db_cursor, email: str, password: str = None, role: str = ""):
-    sql = f"INSERT INTO users(email, password, role) VALUES ('{email}', '{password}', '{role}')"
+def add_user(connection, db_cursor, email: str, password: str = None, role: str = "", details: str = ""):
+    sql = f"INSERT INTO users(email, password, role, details) VALUES ('{email}', '{password}', '{role}', '{details}')"
 
     try:
         db_cursor.execute(sql)
@@ -68,12 +68,15 @@ def delete_user(connection, db_cursor, email: str,):
         print("ERROR removing user from db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
 
 
-def get_user(connection, db_cursor, email: str = None, token: str = None):
+def get_user(connection, db_cursor, email: str = None, token: str = None, role: str = None):
     one = True
     if email:
         sql = f"SELECT * FROM users WHERE email = '{email}'"
     elif token:
         sql = f"SELECT * FROM users WHERE token = '{token}'"
+    elif role:
+        sql = f"SELECT * FROM users WHERE role = '{role}'"
+        one = False
     else:
         sql = f"SELECT * FROM users"
         one = False

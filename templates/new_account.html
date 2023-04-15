@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VM120 NS Login</title>
+    <title>VM120 NS novi nalog</title>
     <link rel="icon" type="image/x-icon" href="static/favicon.ico">
     <link rel="stylesheet" href="static/login.css"/>
 </head>
 <body>
 <div class="box">
-    <form method="POST" action="/login">
+    <form method="POST" action="/new_account">
         {% with messages = get_flashed_messages() %}
         {% if messages %}
             <p class="red_notification">
@@ -25,14 +25,10 @@
 
         <div>
             <div class="control">
-                <input type="password" name="password" placeholder="Vaša lozinka">
+                <input type="text" name="apartment" placeholder="Broj stana">
             </div>
         </div>
-        <a class="standalone_link clearfix" href="/reset_password">Zaboravljena lozinka? Resetujte je.</a>
-        <br>
-        <a class="standalone_link clearfix" href="/new_account">Nemate nalog? Napravite ga ovde.</a>
-        <br>
-        <button class="full-width">Prijavi se</button>
+        <button class="full-width">Pošalji</button>
     </form>
 </div>
 </body>
