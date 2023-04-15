@@ -132,10 +132,11 @@ def new_account_post():
         flash('Korisnik sa tom e-mail adresom već postoji.')
         return redirect(url_for('new_account'))
 
-    details = '{"apartment": {}}'.format(apartment)
-    database.add_user(g.connection, g.db_cursor, email=email, details=details, role=Role.PENDING.value)
+    details = {'apartment': apartment}
+    print("DETAILS:", details)
+    database.add_user(g.connection, g.db_cursor, email=email, details=json.dumps(details), role=Role.PENDING.value)
 
-    administrators = helper.get_user(role="admin")
+    administrators = database.get_user(g.connection, g.db_cursor, role="admin")
     admin_mail_list = []
     for admin in administrators:
         admin_mail_list.append(admin["email"])
@@ -143,7 +144,7 @@ def new_account_post():
     if len(admin_mail_list) > 0:
         mail_message = Message('Prijavljen je novi nalog za portal u Veselina Masleše 120.', sender="do_not_reply@vm120.in.rs",
                                recipients=admin_mail_list)
-        mail_message.html = f"<p>e-mail adresa: {email}</p><br><p>Broj stana: {apartment}</p>"
+        mail_message.html = f"<p>e-mail adresa: {email}</p><<p>Broj stana: {apartment}</p>"
         mail.send(mail_message)
 
     flash('Vaš zahtev je prosleđen. Administrator će Vas kontaktirati u najkraćem mogućem roku.')
