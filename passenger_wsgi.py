@@ -620,7 +620,9 @@ def approve_user():
             mail_message = Message('Postavljanje lozinke portala za otključavanje vrata', sender="do_not_reply@vm120.in.rs",
                                    recipients=[pending_user["email"]])
             mail_message.html = "<p>Da biste postavili lozinku za pristup portalu u Veselina Masleše 120, " \
-                                "kliknite <a href='{}'>ovde</a>.</p>".format(reset_link)
+                                "kliknite <a href='{}'>ovde</a>.</p><br>" \
+                                "<p>Za sva pitanja i primedbe možete se obratiti administratoru " \
+                                "na <a href='mailto:ujagaga@gmail.com'>e-mail</a></p>".format(reset_link)
             mail.send(mail_message)
 
             flash('INFO: Poslat je email korisniku radi aktivacije naloga.')
