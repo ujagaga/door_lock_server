@@ -143,7 +143,7 @@ def new_account_post():
     if len(admin_mail_list) > 0:
         mail_message = Message('Prijavljen je novi nalog za portal u Veselina Masleše 120.', sender="do_not_reply@vm120.in.rs",
                                recipients=admin_mail_list)
-        mail_message.html = f"<p>e-mail adresa: {email}</p><<p>Broj stana: {apartment}</p>"
+        mail_message.html = f"<p>e-mail adresa: {email}</p><p>Broj stana: {apartment}</p>"
         mail.send(mail_message)
 
     flash('Vaš zahtev je prosleđen. Administrator će Vas kontaktirati u najkraćem mogućem roku.')
