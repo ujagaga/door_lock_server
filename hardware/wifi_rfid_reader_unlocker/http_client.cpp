@@ -9,7 +9,7 @@
 static uint32_t pingTime = 0;
 static uint32_t lifesignTimeout = 0;
 static char token[64] = {0};
-bool initialHandshakeDone = false;
+static bool initialHandshakeDone = false;
 
 WiFiClient client;
 HTTPClient http;

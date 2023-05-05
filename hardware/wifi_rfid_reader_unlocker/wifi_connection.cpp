@@ -11,12 +11,15 @@
 #include "config.h"
 
 
+#define MAX_AP_TIME   (10 * 60 * 1000)
+
 static char myApName[32] = {0};    /* Array to form AP name based on read MAC */
 static char st_ssid[SSID_SIZE];    /* SSID to connect to */
 static char st_pass[WIFI_PASS_SIZE];    /* Password for the requested SSID */
 static unsigned long connectionTimeoutCheck = 0;
 static IPAddress stationIP;
 static IPAddress apIP(192, 168, 1, 1);
+static bool ap_mode_flag = false;
 
 static bool checkValidIp(IPAddress IP){
   /* check if they are all zero value */
@@ -38,6 +41,13 @@ char* WIFIC_getDeviceName(void){
 
 IPAddress WIFIC_getApIp(void){
   return apIP;
+}
+
+void WIFIC_process(){
+  if(ap_mode_flag && (millis() > MAX_AP_TIME)){
+    // AP mode too long. Reset to try the station.
+    ESP.restart();
+  }
 }
 
 /* Returns wifi scan results */
@@ -84,6 +94,7 @@ void WIFIC_APMode(void){
   * the device remains unconnectable without the original AP. I have not been able to find why, 
   * but the following seems to fix the problem. */
   WiFi.scanNetworks();
+  ap_mode_flag = true;
 }
 
 

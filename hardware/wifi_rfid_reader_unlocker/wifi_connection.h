@@ -11,5 +11,6 @@ extern String WIFIC_getStSSID(void);
 extern String WIFIC_getStPass(void);
 extern IPAddress WIFIC_getApIp(void);
 extern char* WIFIC_getDeviceName(void);
+extern void WIFIC_process(void);
 
 #endif

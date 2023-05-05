@@ -29,7 +29,8 @@ String MAIN_getStatusMsg(void){
 void setup(void) {
   /* Need to wait for background processes to complete. Otherwise trouble with gpio.*/
   delay(100);   
-  Serial.begin(115200,SERIAL_8N1,SERIAL_TX_ONLY); /* Use only tx, so rx can be used as GPIO */   
+  Serial.begin(115200,SERIAL_8N1,SERIAL_TX_ONLY); /* Use only tx, so rx can be used as GPIO */ 
+  Serial.println("*******");  
   //ESP.eraseConfig();  
   PINCTRL_init();  
   WIFIC_init();
@@ -46,4 +47,5 @@ void loop(void) {
   MQTT_process();  
   PINCTRL_process();
   RFID_process();
+  WIFIC_process();
 }
