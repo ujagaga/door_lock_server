@@ -18,7 +18,7 @@ void process_beep(){
 void PINCTRL_beep(void){
   if(beepTime == 0){
     beepTime = millis();
-    analogWrite(BEEPER_PIN, 100);
+    analogWrite(BEEPER_PIN, 100);    
   } 
 }
 

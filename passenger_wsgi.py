@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from flask import Flask, g, render_template, request, flash, url_for, redirect, make_response, abort, jsonify
+from flask import Flask, g, render_template, request, flash, url_for, redirect, make_response, abort, jsonify, after_this_request
 from flask_mail import Message, Mail
 import time
 import json
@@ -479,7 +479,9 @@ def device_report_nfc_code():
                 database.update_nfc_code(g.connection, g.db_cursor, code=encrypted_code, last_used=timestamp)
 
                 if existing_code["email"]:
-                    perform_unlock()
+                    @after_this_request
+                    def do_long_operation():
+                        perform_unlock()
             else:
                 database.add_nfc_code(g.connection, g.db_cursor, timestamp=timestamp, code=encrypted_code.replace('"', ''))
 

@@ -12,6 +12,38 @@ uint32_t detect_timestamp = 0;
 char c;
 bool card_detected_flag = false;
 
+String card_id = "";
+
+char code_cache[CODE_CACHE_SIZE][16] = {0};
+int wrId = 0;
+
+bool check_code_cached(){
+  for(int i = 0; i < CODE_CACHE_SIZE; ++i){
+    if(code_cache[i] == 0){
+      return false;
+    }
+    
+    String test_code = String(code_cache[i]);
+    if (test_code.equals(card_id)){
+      return true;
+    }
+  }
+  return false;
+}
+
+void RFID_saveLastCode(){
+  Serial.println("Saving:" + card_id);
+  if((millis() - detect_timestamp) < TIME_TO_UNLOCK){  
+    if(!check_code_cached() && (wrId < CODE_CACHE_SIZE)){
+      card_id.toCharArray(code_cache[wrId], 15);
+
+      Serial.print("Saved:");
+      Serial.println(code_cache[wrId]);
+      wrId++;
+    }
+  }
+}
+
 void RFID_init(void)
 {
   RFID.begin(9600);
@@ -27,12 +59,17 @@ void RFID_process(void){
     }
     
     if((text.length() == 12) && !card_detected_flag){
-      String card_id = text.substring(1, 11) + HASH_SALT; 
+      card_id = text.substring(1, 11);
       card_detected_flag = true; 
 
-      String hashedCode = sha1(card_id);
       PINCTRL_beep();
-      HTTPC_reportCode(hashedCode);
+      
+      if(check_code_cached()){
+        PINCTRL_trigger();
+      }else{
+        String hashedCode = sha1(card_id + HASH_SALT);
+        HTTPC_reportCode(hashedCode);
+      }
     }   
   
     detect_timestamp = millis();    

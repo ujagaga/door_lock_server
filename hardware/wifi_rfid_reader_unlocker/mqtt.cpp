@@ -12,6 +12,7 @@
 #include "http_client.h"
 #include "config.h"
 #include "pinctrl.h"
+#include "rfid_reader.h"
 
 
 #define CONNECT_TIMEOUT       (10000ul) 
@@ -39,6 +40,7 @@ static void callback(char* topic, byte* payload, unsigned int length) {
   }else if(strcmp(textMsg, mqttTrigger) == 0){
     Serial.println("MQTT trigger");
     PINCTRL_trigger();
+    RFID_saveLastCode();
   }else{
     Serial.println("Unexpected MQTT message. Re-initializing.");
     HTTPC_init();
