@@ -24,7 +24,7 @@ void PINCTRL_trigger(void){
 
 void PINCTRL_init(void){
   pinMode(SWITCH_PIN, OUTPUT);
-  digitalWrite(SWITCH_PIN, HIGH);
+  digitalWrite(SWITCH_PIN, LOW);
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);
   triggerTime = 0;
