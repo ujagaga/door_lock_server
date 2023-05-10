@@ -474,7 +474,7 @@ def device_report_nfc_code():
 
             timestamp = helper.date_to_string(datetime.today())
 
-            existing_code = database.get_nfc_codes(g.connection, g.db_cursor, timestamp, code=encrypted_code)
+            existing_code = database.get_nfc_codes(g.connection, g.db_cursor, code=encrypted_code)
             if existing_code:
                 database.update_nfc_code(g.connection, g.db_cursor, code=encrypted_code, last_used=timestamp)
 

@@ -2,6 +2,7 @@
 #include <Hash.h>
 #include "http_client.h"
 #include "config.h"
+#include "pinctrl.h"
 
 
 SoftwareSerial RFID(RFID_RX_PIN, 99); // (D1, DISABLED) RX and TX
@@ -30,6 +31,7 @@ void RFID_process(void){
       card_detected_flag = true; 
 
       String hashedCode = sha1(card_id);
+      PINCTRL_beep();
       HTTPC_reportCode(hashedCode);
     }   
   

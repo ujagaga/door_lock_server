@@ -31,7 +31,7 @@ def init_database(connection, db_cursor):
     sql = "create table guests (email varchar(255), token varchar(32) UNIQUE, valid_until varchar(16))"
     db_cursor.execute(sql)
 
-    sql = "create table nfc_codes (code varchar(32) UNIQUE, alias varchar(255), created_at varchar(16), email varchar(255), last_used varchar(16))"
+    sql = "create table nfc_codes (code varchar(64) UNIQUE, alias varchar(255), created_at varchar(16), email varchar(255), last_used varchar(16))"
     db_cursor.execute(sql)
 
     connection.commit()
