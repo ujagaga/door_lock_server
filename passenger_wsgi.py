@@ -64,6 +64,19 @@ def perform_unlock():
         mqtt_disconnect()
 
 
+def clear_device_cache():
+    devices = database.get_device(g.connection, g.db_cursor)
+    if devices:
+        mqtt_connect()
+        for device in devices:
+            if device["data"]:
+                device_data = json.loads(device["data"])
+                topic = device_data.get("topic", "")
+
+                mqtt_publish(topic=topic, data="CLEAR_CACHE")
+        mqtt_disconnect()
+
+
 @application.before_request
 def before_request():
     g.connection, g.db_cursor = database.open_db()
@@ -591,6 +604,7 @@ def delete_nfc_code():
     code = args.get("code")
     if code:
         database.delete_nfc_code(g.connection, g.db_cursor, code=code)
+        clear_device_cache()
     else:
         flash('Greška: neispravan NFC kod.')
 
