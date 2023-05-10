@@ -74,6 +74,9 @@ def teardown_request(exception):
     if hasattr(g, 'connection'):
         database.close_db(g.connection, g.db_cursor)
 
+    if hasattr(g, 'unlock'):
+        perform_unlock()
+
 
 @application.route('/logout')
 def logout():
@@ -479,7 +482,8 @@ def device_report_nfc_code():
                 database.update_nfc_code(g.connection, g.db_cursor, code=encrypted_code, last_used=timestamp)
 
                 if existing_code["email"]:
-                    perform_unlock()
+                    # perform_unlock()
+                    g.unlock = True
             else:
                 database.add_nfc_code(g.connection, g.db_cursor, timestamp=timestamp, code=encrypted_code.replace('"', ''))
 
