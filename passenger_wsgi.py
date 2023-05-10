@@ -482,11 +482,12 @@ def device_report_nfc_code():
                 database.update_nfc_code(g.connection, g.db_cursor, code=encrypted_code, last_used=timestamp)
 
                 if existing_code["email"]:
-                    perform_unlock()
+                    response = {"status": "OK", "detail": "authorized"}
+                else:
+                    response = {"status": "OK", "detail": "unauthorized"}
             else:
                 database.add_nfc_code(g.connection, g.db_cursor, timestamp=timestamp, code=encrypted_code.replace('"', ''))
-
-            response = {"status": "OK"}
+                response = {"status": "OK", "detail": "unauthorized"}
         else:
             response = {"status": "ERROR", "detail": "Missing code"}
     else:
