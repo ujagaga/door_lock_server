@@ -65,6 +65,23 @@ def perform_unlock():
         mqtt_disconnect()
 
 
+def perform_unlock_async():
+    connection, db_cursor = database.open_db()
+    devices = database.get_device(connection, db_cursor)
+    database.close_db(connection, db_cursor)
+
+    if devices:
+        mqtt_connect()
+        for device in devices:
+            if device["data"]:
+                device_data = json.loads(device["data"])
+                topic = device_data.get("topic", "")
+                trigger = device_data.get("trigger", "")
+
+                mqtt_publish(topic=topic, data=trigger)
+        mqtt_disconnect()
+
+
 @application.before_request
 def before_request():
     g.connection, g.db_cursor = database.open_db()
@@ -484,7 +501,7 @@ def device_report_nfc_code():
 
                 if existing_code["email"]:
                     def background_unlocking():
-                        perform_unlock()
+                        perform_unlock_async()
 
                     thread = Thread(target=background_unlocking)
                     thread.start()
