@@ -13,7 +13,6 @@ import database
 import helper
 import paho.mqtt.client as mqtt
 from constants import Role
-from threading import Thread
 
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -53,23 +52,6 @@ def mqtt_publish(topic: str, data: str):
 
 def perform_unlock():
     devices = database.get_device(g.connection, g.db_cursor)
-    if devices:
-        mqtt_connect()
-        for device in devices:
-            if device["data"]:
-                device_data = json.loads(device["data"])
-                topic = device_data.get("topic", "")
-                trigger = device_data.get("trigger", "")
-
-                mqtt_publish(topic=topic, data=trigger)
-        mqtt_disconnect()
-
-
-def perform_unlock_async():
-    connection, db_cursor = database.open_db()
-    devices = database.get_device(connection, db_cursor)
-    database.close_db(connection, db_cursor)
-
     if devices:
         mqtt_connect()
         for device in devices:
@@ -500,11 +482,7 @@ def device_report_nfc_code():
                 database.update_nfc_code(g.connection, g.db_cursor, code=encrypted_code, last_used=timestamp)
 
                 if existing_code["email"]:
-                    def background_unlocking():
-                        perform_unlock_async()
-
-                    thread = Thread(target=background_unlocking)
-                    thread.start()
+                    perform_unlock()
             else:
                 database.add_nfc_code(g.connection, g.db_cursor, timestamp=timestamp, code=encrypted_code.replace('"', ''))
 
