@@ -13,6 +13,7 @@ import database
 import helper
 import paho.mqtt.client as mqtt
 from constants import Role
+from threading import Thread
 
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -482,8 +483,11 @@ def device_report_nfc_code():
                 database.update_nfc_code(g.connection, g.db_cursor, code=encrypted_code, last_used=timestamp)
 
                 if existing_code["email"]:
-                    # perform_unlock()
-                    g.unlock = True
+                    def background_unlocking():
+                        perform_unlock()
+
+                    thread = Thread(target=background_unlocking)
+                    thread.start()
             else:
                 database.add_nfc_code(g.connection, g.db_cursor, timestamp=timestamp, code=encrypted_code.replace('"', ''))
 
