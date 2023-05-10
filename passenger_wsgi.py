@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from flask import Flask, g, render_template, request, flash, url_for, redirect, make_response, abort, jsonify, after_this_request
+from flask import Flask, g, render_template, request, flash, url_for, redirect, make_response, abort, jsonify
 from flask_mail import Message, Mail
 import time
 import json
@@ -463,6 +463,7 @@ def delete_temporary_unlock_link():
 def device_report_nfc_code():
     args = request.args
     token = args.get("token")
+    do_unlock = False
 
     if token:
         code = args.get("code")
@@ -479,9 +480,7 @@ def device_report_nfc_code():
                 database.update_nfc_code(g.connection, g.db_cursor, code=encrypted_code, last_used=timestamp)
 
                 if existing_code["email"]:
-                    @after_this_request
-                    def do_long_operation():
-                        perform_unlock()
+                    do_unlock = True
             else:
                 database.add_nfc_code(g.connection, g.db_cursor, timestamp=timestamp, code=encrypted_code.replace('"', ''))
 
@@ -491,7 +490,11 @@ def device_report_nfc_code():
     else:
         response = {"status": "ERROR", "detail": "Missing token"}
 
-    return jsonify(response)
+    if do_unlock:
+        yield jsonify(response)
+        perform_unlock()
+    else:
+        return jsonify(response)
 
 
 @application.route('/device_get_nfc_codes', methods=['GET'])
