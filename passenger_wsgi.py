@@ -463,7 +463,6 @@ def delete_temporary_unlock_link():
 def device_report_nfc_code():
     args = request.args
     token = args.get("token")
-    do_unlock = False
 
     if token:
         code = args.get("code")
@@ -480,7 +479,7 @@ def device_report_nfc_code():
                 database.update_nfc_code(g.connection, g.db_cursor, code=encrypted_code, last_used=timestamp)
 
                 if existing_code["email"]:
-                    do_unlock = True
+                    perform_unlock()
             else:
                 database.add_nfc_code(g.connection, g.db_cursor, timestamp=timestamp, code=encrypted_code.replace('"', ''))
 
@@ -490,11 +489,7 @@ def device_report_nfc_code():
     else:
         response = {"status": "ERROR", "detail": "Missing token"}
 
-    if do_unlock:
-        yield jsonify(response)
-        perform_unlock()
-    else:
-        return jsonify(response)
+    return jsonify(response)
 
 
 @application.route('/device_get_nfc_codes', methods=['GET'])
