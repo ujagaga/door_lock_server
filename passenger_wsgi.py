@@ -531,12 +531,7 @@ def device_get_nfc_codes():
                 max = 10
 
             nfc_codes = database.get_nfc_codes(g.connection, g.db_cursor, start_id=start, max_num=max)
-            codes = []
-            if nfc_codes:
-                for code in nfc_codes:
-                    codes.append(code["code"])
-
-            response = {"status": "OK", "codes": codes}
+            response = {"status": "OK", "codes": nfc_codes}
         else:
             response = {"status": "ERROR", "detail": "forbidden"}
 

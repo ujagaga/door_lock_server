@@ -31,7 +31,7 @@ def init_database(connection, db_cursor):
     sql = "create table guests (email varchar(255), token varchar(32) UNIQUE, valid_until varchar(16))"
     db_cursor.execute(sql)
 
-    sql = "create table nfc_codes (code varchar(64) UNIQUE, alias varchar(255), created_at varchar(16), email varchar(255), last_used varchar(16))"
+    sql = "create table nfc_codes (id int NOT NULL AUTO_INCREMENT, code varchar(64) UNIQUE, alias varchar(255), created_at varchar(16), email varchar(255), last_used varchar(16))"
     db_cursor.execute(sql)
 
     connection.commit()
@@ -275,18 +275,18 @@ def get_nfc_codes(connection, db_cursor, email: str = None, code: str = None, st
         one = True
     elif email:
         sql = f"SELECT * FROM nfc_codes WHERE email = '{email}' ORDER BY created_at ASC"
-    elif start_id:
+    elif start_id is not None:
         sql = f"SELECT * FROM nfc_codes WHERE email IS NOT NULL ORDER BY created_at ASC " \
               f"LIMIT {start_id}, {start_id + max_num}"
     else:
-        sql = f"SELECT * FROM nfc_codes WHERE email IS NOT NULL"
+        sql = f"SELECT * FROM nfc_codes WHERE email IS NULL"
 
     try:
         db_cursor.execute(sql)
         if one:
             data = db_cursor.fetchone()
             if data:
-                codes = {"code": data[0], "alias": data[1], "created_at": data[2], "email": data[3], "last_used": data[4]}
+                codes = {"code": data[1], "alias": data[2], "created_at": data[3], "email": data[4], "last_used": data[5]}
             else:
                 codes = None
         else:
@@ -294,7 +294,7 @@ def get_nfc_codes(connection, db_cursor, email: str = None, code: str = None, st
             raw_data = db_cursor.fetchall()
             if raw_data:
                 for data in raw_data:
-                    codes.append({"code": data[0], "alias": data[1], "last_used": data[4]})
+                    codes.append({"id": data[0], "code": data[1], "alias": data[2], "last_used": data[3]})
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print(f"ERROR reading nfc codes on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
