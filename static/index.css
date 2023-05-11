@@ -18,7 +18,7 @@ body{
     margin: 0 auto;
     padding: 0;
     text-align: center;
-    max-width: 600px;
+    max-width: 660px;
     min-height: 100vh;
 }
 
@@ -85,7 +85,7 @@ body{
     text-decoration: none;
     float: right;
     margin: 5px;
-    width: 10em;
+    width: 6em;
     height: 1em;
 }
 
@@ -135,10 +135,7 @@ td:nth-child(2), th:nth-child(2) {
 }
 
 .to-bottom{
-    position: absolute;
-    bottom: 0;
     background-color: #e7d7c3;
-    margin: 0;
 }
 
 h1{

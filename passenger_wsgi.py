@@ -509,38 +509,6 @@ def device_report_nfc_code():
     return jsonify(response)
 
 
-@application.route('/device_get_nfc_codes', methods=['GET'])
-def device_get_nfc_codes():
-    args = request.args
-    token = args.get("token")
-
-    if token:
-        device = database.get_device(g.connection, g.db_cursor, token=token)
-        if device:
-            start_from = args.get("start")
-            max_count = args.get("max")
-
-            if start_from:
-                start = int(start_from)
-            else:
-                start = 0
-
-            if max_count:
-                max = int(max_count)
-            else:
-                max = 10
-
-            nfc_codes = database.get_nfc_codes(g.connection, g.db_cursor, start_id=start, max_num=max)
-            response = {"status": "OK", "codes": nfc_codes}
-        else:
-            response = {"status": "ERROR", "detail": "forbidden"}
-
-    else:
-        response = {"status": "ERROR", "detail": "Missing token"}
-
-    return jsonify(response)
-
-
 @application.route('/authorize_nfc_code', methods=['GET'])
 def authorize_nfc_code():
     token = request.cookies.get('token')
