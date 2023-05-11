@@ -274,10 +274,10 @@ def get_nfc_codes(connection, db_cursor, email: str = None, code: str = None, st
         sql = f"SELECT * FROM nfc_codes WHERE code = '{code}'"
         one = True
     elif email:
-        sql = f"SELECT * FROM nfc_codes WHERE email = '{email}' ORDER BY created_at ASC"
+        sql = f"SELECT * FROM nfc_codes WHERE email = '{email}' ORDER BY id ASC"
     elif start_id is not None:
-        sql = f"SELECT * FROM nfc_codes WHERE email IS NOT NULL ORDER BY created_at ASC " \
-              f"LIMIT {start_id}, {start_id + max_num}"
+        sql = f"SELECT * FROM nfc_codes WHERE email IS NOT NULL ORDER BY id ASC " \
+              f"LIMIT {start_id}, {max_num}"
     else:
         sql = f"SELECT * FROM nfc_codes WHERE email IS NULL"
 
