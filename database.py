@@ -286,7 +286,7 @@ def get_nfc_codes(connection, db_cursor, email: str = None, code: str = None, st
         if one:
             data = db_cursor.fetchone()
             if data:
-                codes = {"code": data[1], "alias": data[2], "created_at": data[3], "email": data[4], "last_used": data[5]}
+                codes = {"id": data[0], "code": data[1], "alias": data[2], "created_at": data[3], "email": data[4], "last_used": data[5]}
             else:
                 codes = None
         else:
@@ -294,7 +294,7 @@ def get_nfc_codes(connection, db_cursor, email: str = None, code: str = None, st
             raw_data = db_cursor.fetchall()
             if raw_data:
                 for data in raw_data:
-                    codes.append({"id": data[0], "code": data[1], "alias": data[2], "last_used": data[3]})
+                    codes.append({"id": data[0], "code": data[1], "alias": data[2], "created_at": data[3], "email": data[4], "last_used": data[5]})
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print(f"ERROR reading nfc codes on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
