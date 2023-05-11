@@ -65,10 +65,8 @@ void RFID_process(void){
       PINCTRL_beep();
       
       if(check_code_cached()){
-        Serial.println("Cached");
         PINCTRL_trigger();
       }else{
-        Serial.println("Reported");
         String hashedCode = sha1(card_id + HASH_SALT);
         HTTPC_reportCode(hashedCode);
       }

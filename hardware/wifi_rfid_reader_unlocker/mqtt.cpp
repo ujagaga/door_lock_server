@@ -41,7 +41,7 @@ static void callback(char* topic, byte* payload, unsigned int length) {
     Serial.println("MQTT trigger");
     PINCTRL_trigger();   
   }else if(strcmp(textMsg, "CLEAR_CACHE") == 0){
-    Serial.println("MQTT trigger");
+    Serial.println("MQTT clear cache");
     RFID_clear_cache();   
   }else{
     Serial.println("Unexpected MQTT message: " + String(textMsg) + "\n    Re-initializing.");

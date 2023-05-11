@@ -70,7 +70,6 @@ void HTTPC_reportCode(String code){
       PINCTRL_trigger();  
       RFID_saveLastCode();  
     }
-    Serial.println(payload);
   }
   else {
     Serial.print(serverPath + "\nError code: ");        

@@ -126,11 +126,15 @@ td p{
     margin: auto;
 }
 
-td:nth-child(1), th:nth-child(1) {
+.id_codes td:nth-child(1), .id_codes th:nth-child(1) {
     text-align: left;
+    width: 10em;
+    max-width: 10em;
+    overflow: hidden;
 }
 
-td:nth-child(2), th:nth-child(2) {
+.id_codes td:nth-child(3), .id_codes th:nth-child(3) {
+    text-align: left;
     width: 2em;
 }
 
