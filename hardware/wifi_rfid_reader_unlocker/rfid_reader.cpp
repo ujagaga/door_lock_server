@@ -19,7 +19,7 @@ int wrId = 0;
 
 bool check_code_cached(){
   for(int i = 0; i < CODE_CACHE_SIZE; ++i){
-    if(code_cache[i] == 0){
+    if(code_cache[i][0] == 0){
       return false;
     }
     
@@ -31,16 +31,16 @@ bool check_code_cached(){
   return false;
 }
 
-void RFID_saveLastCode(){
-  Serial.println("Saving:" + card_id);
-  if((millis() - detect_timestamp) < TIME_TO_UNLOCK){  
-    if(!check_code_cached() && (wrId < CODE_CACHE_SIZE)){
-      card_id.toCharArray(code_cache[wrId], 15);
+void RFID_clear_cache(){
+  for(int i = 0; i < CODE_CACHE_SIZE; ++i){
+    code_cache[i][0] = 0;   
+  } 
+}
 
-      Serial.print("Saved:");
-      Serial.println(code_cache[wrId]);
-      wrId++;
-    }
+void RFID_saveLastCode(){
+  if(!check_code_cached() && (wrId < CODE_CACHE_SIZE)){
+    card_id.toCharArray(code_cache[wrId], 15);
+    wrId++;
   }
 }
 
@@ -65,8 +65,10 @@ void RFID_process(void){
       PINCTRL_beep();
       
       if(check_code_cached()){
+        Serial.println("Cached");
         PINCTRL_trigger();
       }else{
+        Serial.println("Reported");
         String hashedCode = sha1(card_id + HASH_SALT);
         HTTPC_reportCode(hashedCode);
       }

@@ -4,7 +4,8 @@
 #include "config.h"
 #include <ArduinoJson.h>
 #include "mqtt.h"
-
+#include "pinctrl.h"
+#include "rfid_reader.h"
 
 static uint32_t pingTime = 0;
 static uint32_t lifesignTimeout = 0;
@@ -65,6 +66,11 @@ void HTTPC_reportCode(String code){
     if(payload.indexOf("ERROR") > 0){
       Serial.println("Code reporting error:" + payload);      
     }
+    if(payload.indexOf("authorized") > 0){
+      PINCTRL_trigger();  
+      RFID_saveLastCode();  
+    }
+    Serial.println(payload);
   }
   else {
     Serial.print(serverPath + "\nError code: ");        

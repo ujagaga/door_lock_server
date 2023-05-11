@@ -23,7 +23,9 @@ void PINCTRL_beep(void){
 }
 
 void PINCTRL_trigger(void){
-  triggerTime = millis();
+  if(triggerTime == 0){
+    triggerTime = millis();
+  }
 }
 
 void PINCTRL_init(void){

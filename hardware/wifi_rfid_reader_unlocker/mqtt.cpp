@@ -39,10 +39,12 @@ static void callback(char* topic, byte* payload, unsigned int length) {
     HTTPC_confirmLifesign();
   }else if(strcmp(textMsg, mqttTrigger) == 0){
     Serial.println("MQTT trigger");
-    PINCTRL_trigger();
-    RFID_saveLastCode();
+    PINCTRL_trigger();   
+  }else if(strcmp(textMsg, "CLEAR_CACHE") == 0){
+    Serial.println("MQTT trigger");
+    RFID_clear_cache();   
   }else{
-    Serial.println("Unexpected MQTT message. Re-initializing.");
+    Serial.println("Unexpected MQTT message: " + String(textMsg) + "\n    Re-initializing.");
     HTTPC_init();
   }  
 }
