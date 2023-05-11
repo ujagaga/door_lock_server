@@ -240,7 +240,7 @@ def device_ping():
                 print(f"ERROR: parsing device on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
                 response = {"status": "ERROR", "detail": "JSON parsing error"}
         else:
-            response = {"status": "ERROR", "detail": "Unauthorized"}
+            response = {"status": "ERROR", "detail": "forbidden"}
     else:
         response = {"status": "ERROR", "detail": "Missing token"}
 
@@ -269,7 +269,7 @@ def device_lifesign_confirm():
                 print(f"ERROR: parsing device on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
                 response = {"status": "ERROR", "detail": "JSON parsing error"}
         else:
-            response = {"status": "ERROR", "detail": "Unauthorized"}
+            response = {"status": "ERROR", "detail": "forbidden"}
     else:
         response = {"status": "ERROR", "detail": "Missing token"}
 
@@ -500,7 +500,7 @@ def device_report_nfc_code():
                     response = {"status": "OK", "detail": "forbidden"}
             else:
                 database.add_nfc_code(g.connection, g.db_cursor, timestamp=timestamp, code=encrypted_code.replace('"', ''))
-                response = {"status": "OK", "detail": "unauthorized"}
+                response = {"status": "OK", "detail": "forbidden"}
         else:
             response = {"status": "ERROR", "detail": "Missing code"}
     else:
@@ -538,7 +538,7 @@ def device_get_nfc_codes():
 
             response = {"status": "OK", "codes": codes}
         else:
-            response = {"status": "ERROR", "detail": "Unauthorized"}
+            response = {"status": "ERROR", "detail": "forbidden"}
 
     else:
         response = {"status": "ERROR", "detail": "Missing token"}
