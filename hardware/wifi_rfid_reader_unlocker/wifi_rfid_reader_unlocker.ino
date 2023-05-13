@@ -7,7 +7,6 @@
  */
 
 #include "http_server.h"
-#include "web_socket.h"
 #include "wifi_connection.h"
 #include "config.h"
 #include "pinctrl.h"
@@ -33,14 +32,12 @@ void setup(void) {
   PINCTRL_init();  
   WIFIC_init();
   HTTPS_init();
-  WS_init();  
   RFID_init();
 }
 
 
 void loop(void) {  
   HTTPS_process();  
-  WS_process();
   PINCTRL_process();
   RFID_process();
   WIFIC_process();

@@ -4,6 +4,7 @@
 extern void RFID_init(void);
 extern void RFID_process(void);
 extern void RFID_saveLastCode(void);
-extern void RFID_clear_cache(void);
+extern void RFID_clearCodes(void);
+extern String RFID_getUnsavedCode(void);
 
 #endif

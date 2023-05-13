@@ -1,25 +1,24 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define WIFI_PASS_EEPROM_ADDR   (0)
-#define WIFI_PASS_SIZE          (32)
-#define SSID_EEPROM_ADDR        (WIFI_PASS_EEPROM_ADDR + WIFI_PASS_SIZE)
-#define SSID_SIZE               (32)
-#define EEPROM_SIZE             (WIFI_PASS_SIZE + SSID_SIZE)   
+#define CODE_CACHE_SIZE         (100)   /* Storage space for detected RFID and NFC codes. */
+#define CODE_LENGTH             (16)    /* Each code is 20 bytes long, but we are saving only the last 16 bytes for security reasons. */
+
+#define AP_PASS                 "Your_s@fe_Passw0rd"
+#define AP_NAME                 "Door_Lock_WiFi"
+  
 
 /* 19 characters maximum. When we append MAC addr, it will be 31. 
 The device fails to create an AP if total AP name is longer than 31 character. */
 #define AP_NAME_PREFIX          "Door_lock_"
-#define SWITCH_PIN               2 /* D4 */   
-#define UNLOCK_DURATION          (10)
-#define LOCK_SERVER_URL         "http://your_door.server"
-#define DEV_NAME                "your_dev_name_as_set_on_server"
-#define DEV_PASSWORD		"your_device_password_set_on_server"
-
-#define MQTT_SERVER_HOSTNAME  "broker.emqx.io"
-#define MQTT_PORT             1883
+#define SWITCH_PIN              (0) /* D3 */   
+#define LED_PIN                 (2) /* D4 */ 
+#define UNLOCK_DURATION         (7)
 
 #define RFID_RX_PIN             (5) /* D1 */
 #define HASH_SALT               "SomeR@ndomStr1ng"
+#define BEEP_TIMEOUT            (500)
+#define BEEPER_PIN              (4)
+
 
 #endif
