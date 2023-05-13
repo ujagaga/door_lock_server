@@ -5,7 +5,6 @@
 #include <ArduinoJson.h>
 #include "mqtt.h"
 #include "pinctrl.h"
-#include "rfid_reader.h"
 
 static uint32_t pingTime = 0;
 static uint32_t lifesignTimeout = 0;
@@ -36,6 +35,7 @@ void pingServer(void){
   http.end();  
 }
 
+
 void HTTPC_confirmLifesign(void){  
   String serverPath = String(LOCK_SERVER_URL) + "/device_lifesign_confirm?token=" + String(token);
   http.begin(client, serverPath.c_str());
@@ -56,28 +56,6 @@ void HTTPC_confirmLifesign(void){
   http.end();  
 }
 
-void HTTPC_reportCode(String code){  
-  String serverPath = String(LOCK_SERVER_URL) + "/device_report_nfc_code?token=" + String(token) + "&code=" + code;
-  http.begin(client, serverPath.c_str());
-
-  int httpResponseCode = http.GET();
-  if (httpResponseCode > 0) { 
-    String payload = http.getString();
-    if(payload.indexOf("ERROR") > 0){
-      Serial.println("Code reporting error:" + payload);      
-    }
-    if(payload.indexOf("authorized") > 0){
-      PINCTRL_trigger();  
-      RFID_saveLastCode();  
-    }
-  }
-  else {
-    Serial.print(serverPath + "\nError code: ");        
-    Serial.println(httpResponseCode);
-  }
-  // Free resources
-  http.end();  
-}
 
 void HTTPC_init(void){  
   String serverPath = String(LOCK_SERVER_URL) + "/device_login?name=" + DEV_NAME + "&password=" + DEV_PASSWORD;

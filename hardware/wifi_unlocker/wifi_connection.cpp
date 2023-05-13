@@ -13,7 +13,6 @@
 
 #define MAX_AP_TIME   (10 * 60 * 1000)
 
-
 static char myApName[32] = {0};    /* Array to form AP name based on read MAC */
 static char st_ssid[SSID_SIZE];    /* SSID to connect to */
 static char st_pass[WIFI_PASS_SIZE];    /* Password for the requested SSID */

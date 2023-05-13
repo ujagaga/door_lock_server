@@ -1,6 +1,6 @@
 #include <SoftwareSerial.h>
 #include <Hash.h>
-#include "http_client.h"
+#include <EEPROM.h>
 #include "config.h"
 #include "pinctrl.h"
 
@@ -17,6 +17,7 @@ String card_id = "";
 char code_cache[CODE_CACHE_SIZE][16] = {0};
 int wrId = 0;
 
+
 bool check_code_cached(){
   for(int i = 0; i < CODE_CACHE_SIZE; ++i){
     if(code_cache[i][0] == 0){
@@ -31,11 +32,13 @@ bool check_code_cached(){
   return false;
 }
 
+
 void RFID_clear_cache(){
   for(int i = 0; i < CODE_CACHE_SIZE; ++i){
     code_cache[i][0] = 0;   
   } 
 }
+
 
 void RFID_saveLastCode(){
   if(!check_code_cached() && (wrId < CODE_CACHE_SIZE)){
@@ -44,10 +47,12 @@ void RFID_saveLastCode(){
   }
 }
 
+
 void RFID_init(void)
 {
   RFID.begin(9600);
 }
+
 
 void RFID_process(void){
   if(RFID.available() > 0) {  
@@ -66,9 +71,6 @@ void RFID_process(void){
       
       if(check_code_cached()){
         PINCTRL_trigger();
-      }else{
-        String hashedCode = sha1(card_id + HASH_SALT);
-        HTTPC_reportCode(hashedCode);
       }
     }   
   

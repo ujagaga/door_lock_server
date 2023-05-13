@@ -14,12 +14,11 @@
 #include "wifi_connection.h"
 #include "web_socket.h"
 #include "config.h"
-#include "wifi_rfid_reader_unlocker.h"
+#include "wifi_unlocker.h"
 
 
 /* Declaring a web server object. */
 static ESP8266WebServer webServer(80);
-
 
 static String getContentType(String filename) { // convert the file extension to the MIME type
   String retType = "text/plain";
@@ -39,7 +38,6 @@ static String getContentType(String filename) { // convert the file extension to
   }
   return retType;
 }
-
 
 static bool handleFileRead(String path) { // send the right file to the client (if it exists)
   bool retVal = false;
@@ -71,13 +69,11 @@ static bool handleFileRead(String path) { // send the right file to the client (
   return retVal;                                        
 }
 
-
 static void showNotFound(void){
   if (!handleFileRead("/not_found.html")){
     webServer.send(404, "text/plain", "Page not found!");      
   }
 }
-
 
 static void showStatusPage() {    
   Serial.println("showStatusPage");
@@ -85,20 +81,17 @@ static void showStatusPage() {
   webServer.send(200, "text/plain", response);   
 }
 
-
 static void showRedirectPage(void){
   if (!handleFileRead("/redirect.html")){
      showNotFound();        
   }   
 }
 
-
 static void showHome(void){
   if (!handleFileRead("/select_ap.html")){
      showNotFound();        
   }   
 }
-
 
 /* Saves wifi settings to EEPROM */
 static void saveWiFi(void){
@@ -157,11 +150,9 @@ static void saveWiFi(void){
   ESP.restart();
 }
 
-
 void HTTPS_process(void){
   webServer.handleClient(); 
 }
-
 
 void HTTPS_init(void){ 
   webServer.on("/", showHome);

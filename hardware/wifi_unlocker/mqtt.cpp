@@ -12,7 +12,6 @@
 #include "http_client.h"
 #include "config.h"
 #include "pinctrl.h"
-#include "rfid_reader.h"
 
 
 #define CONNECT_TIMEOUT       (10000ul) 
@@ -39,10 +38,7 @@ static void callback(char* topic, byte* payload, unsigned int length) {
     HTTPC_confirmLifesign();
   }else if(strcmp(textMsg, mqttTrigger) == 0){
     Serial.println("MQTT trigger");
-    PINCTRL_trigger();   
-  }else if(strcmp(textMsg, "CLEAR_CACHE") == 0){
-    Serial.println("MQTT clear cache");
-    RFID_clear_cache();   
+    PINCTRL_trigger();
   }else{
     Serial.println("Unexpected MQTT message: " + String(textMsg) + "\n    Re-initializing.");
     HTTPC_init();
@@ -71,7 +67,6 @@ void MQTT_setAuthorization(const char* topic, const char* trigger, const char* l
 }
 
 
-
 static void mqtt_connect() {
   if(strlen(mqttTopic) == 0){
     Serial.println("ERROR: MQTT topic not set.");   
@@ -90,6 +85,7 @@ static void mqtt_connect() {
   }  
 }
 
+
 void MQTT_process(){
   if (!mqttclient.connected() && ((millis() - connectAttemptTime) > CONNECT_TIMEOUT)) {     
     // Not connected. Try again.
@@ -103,6 +99,7 @@ void MQTT_process(){
   
   mqttclient.loop();  
 }
+
 
 bool MQTT_isConnected(void){
   return mqttclient.connected();
