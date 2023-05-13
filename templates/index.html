@@ -58,47 +58,7 @@
             </table>
             {% endif %}
         </div>
-       
 
-         <div class="inner_container">
-            {% if nfc_codes %}
-            <h2>Lista odobrenih kodova</h2>
-            <table class="id_codes">
-                {% for code in nfc_codes %}
-                    <tr>
-                        <td>
-                            {{ code.code }}
-                        </td>
-                        <td>
-                            {{ code.alias }}
-                        </td>
-                        <td>
-                            <p><a href="/delete_nfc_code?code={{ code.code }}" class="small_red_btn">X</a></p>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </table>
-            {% endif %}
-        </div>
-
-        <div class="inner_container">
-            {% if new_code %}
-            <h2>Neregistrovan kod</h2>
-
-            <table>
-                {% for code in new_code %}
-                <tr>
-                    <td>
-                        {{ code.code }}
-                    </td>
-                    <td>
-                        <p><a href="/authorize_nfc_code?code={{ code.code }}" class="green_btn">Registruj</a></p>
-                    </td>
-                </tr>
-                {% endfor %}
-            </table>
-            {% endif %}
-        </div>
 
         <div class="inner_container">
             {% if pending_users %}

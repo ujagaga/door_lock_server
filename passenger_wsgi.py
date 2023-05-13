@@ -64,19 +64,6 @@ def perform_unlock():
         mqtt_disconnect()
 
 
-def clear_device_cache():
-    devices = database.get_device(g.connection, g.db_cursor)
-    if devices:
-        mqtt_connect()
-        for device in devices:
-            if device["data"]:
-                device_data = json.loads(device["data"])
-                topic = device_data.get("topic", "")
-
-                mqtt_publish(topic=topic, data="CLEAR_CACHE")
-        mqtt_disconnect()
-
-
 @application.before_request
 def before_request():
     g.connection, g.db_cursor = database.open_db()
@@ -472,105 +459,6 @@ def delete_temporary_unlock_link():
     link_token = args.get("link_token")
 
     database.delete_guest(g.connection, g.db_cursor, token=link_token)
-    return redirect(url_for('index'))
-
-
-@application.route('/device_report_nfc_code', methods=['GET'])
-def device_report_nfc_code():
-    args = request.args
-    token = args.get("token")
-
-    if token:
-        code = args.get("code")
-        if code:
-            encrypted_code = helper.hash_code(code)
-
-            # Delete unassigned codes
-            database.delete_nfc_code(g.connection, g.db_cursor)
-
-            timestamp = helper.date_to_string(datetime.today())
-
-            existing_code = database.get_nfc_codes(g.connection, g.db_cursor, code=encrypted_code)
-            if existing_code:
-                database.update_nfc_code(g.connection, g.db_cursor, code=encrypted_code, last_used=timestamp)
-
-                if existing_code["email"]:
-                    response = {"status": "OK", "detail": "authorized"}
-                else:
-                    response = {"status": "OK", "detail": "forbidden"}
-            else:
-                database.add_nfc_code(g.connection, g.db_cursor, timestamp=timestamp, code=encrypted_code.replace('"', ''))
-                response = {"status": "OK", "detail": "forbidden"}
-        else:
-            response = {"status": "ERROR", "detail": "Missing code"}
-    else:
-        response = {"status": "ERROR", "detail": "Missing token"}
-
-    return jsonify(response)
-
-
-@application.route('/authorize_nfc_code', methods=['GET'])
-def authorize_nfc_code():
-    token = request.cookies.get('token')
-    if not token:
-        return redirect(url_for('login'))
-
-    user = database.get_user(g.connection, g.db_cursor, token=token)
-    if not user:
-        return redirect(url_for('login'))
-
-    args = request.args
-    code = args.get("code")
-
-    return render_template('authorize_nfc_code.html', token=token, code=code)
-
-
-@application.route('/authorize_nfc_code', methods=['POST'])
-def authorize_nfc_code_post():
-    token = request.cookies.get('token')
-    if not token:
-        return redirect(url_for('login'))
-
-    user = database.get_user(g.connection, g.db_cursor, token=token)
-    if not user:
-        return redirect(url_for('login'))
-
-    code = request.form.get('nfc_code')
-    if code:
-        alias = request.form.get('alias')
-        if not alias or len(alias) < 3:
-            return redirect(url_for('authorize_nfc_code', token=token, code=code))
-
-        timestamp = helper.date_to_string(datetime.today())
-        database.update_nfc_code(
-            g.connection, g.db_cursor, code=code, email=user["email"], alias=alias, last_used=timestamp
-        )
-
-        database.cleanup_unused_nfc_codes(g.connection, g.db_cursor)
-    else:
-        flash('Greška: neispravan NFC kod.')
-
-    return redirect(url_for('index'))
-
-
-@application.route('/delete_nfc_code', methods=['GET'])
-def delete_nfc_code():
-    token = request.cookies.get('token')
-    if not token:
-        return redirect(url_for('login'))
-
-    user = database.get_user(g.connection, g.db_cursor, token=token)
-    if not user:
-        return redirect(url_for('login'))
-
-    args = request.args
-    code = args.get("code")
-    if code:
-        database.delete_nfc_code(g.connection, g.db_cursor, code=code)
-        clear_device_cache()
-    else:
-        flash('Greška: neispravan NFC kod.')
-
     return redirect(url_for('index'))
 
 

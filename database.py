@@ -31,9 +31,6 @@ def init_database(connection, db_cursor):
     sql = "create table guests (email varchar(255), token varchar(32) UNIQUE, valid_until varchar(16))"
     db_cursor.execute(sql)
 
-    sql = "create table nfc_codes (id int NOT NULL AUTO_INCREMENT, code varchar(64) UNIQUE, alias varchar(255), created_at varchar(16), email varchar(255), last_used varchar(16))"
-    db_cursor.execute(sql)
-
     connection.commit()
 
 
@@ -254,87 +251,6 @@ def get_guest(connection, db_cursor, token: str = None, email: str = None):
     return guest
 
 
-def delete_nfc_code(connection, db_cursor, code: str = None):
-    if code:
-        sql = f"DELETE FROM nfc_codes WHERE code = '{code}'"
-    else:
-        sql = f"DELETE FROM nfc_codes WHERE email IS NULL"
-
-    try:
-        db_cursor.execute(sql)
-        connection.commit()
-    except Exception as exc:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR removing nfc code from db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
-
-
-def get_nfc_codes(connection, db_cursor, email: str = None, code: str = None, start_id: int = None, max_num: int = 10):
-    one = False
-    if code:
-        sql = f"SELECT * FROM nfc_codes WHERE code = '{code}'"
-        one = True
-    elif email:
-        sql = f"SELECT * FROM nfc_codes WHERE email = '{email}' ORDER BY id ASC"
-    elif start_id is not None:
-        sql = f"SELECT * FROM nfc_codes WHERE email IS NOT NULL ORDER BY id ASC " \
-              f"LIMIT {start_id}, {max_num}"
-    else:
-        sql = f"SELECT * FROM nfc_codes WHERE email IS NULL"
-
-    try:
-        db_cursor.execute(sql)
-        if one:
-            data = db_cursor.fetchone()
-            if data:
-                codes = {"id": data[0], "code": data[1], "alias": data[2], "created_at": data[3], "email": data[4], "last_used": data[5]}
-            else:
-                codes = None
-        else:
-            codes = []
-            raw_data = db_cursor.fetchall()
-            if raw_data:
-                for data in raw_data:
-                    codes.append({"id": data[0], "code": data[1], "alias": data[2], "created_at": data[3], "email": data[4], "last_used": data[5]})
-    except Exception as exc:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        print(f"ERROR reading nfc codes on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
-        codes = None
-
-    return codes
-
-
-def update_nfc_code(connection, db_cursor, code: str, email: str = None, last_used: str = None, alias: str = None):
-    nfc_code = get_nfc_codes(connection, db_cursor, code=code)
-
-    if email:
-        nfc_code["email"] = email
-    if alias:
-        nfc_code["alias"] = alias
-    if last_used:
-        nfc_code["last_used"] = last_used
-
-    sql = "UPDATE nfc_codes SET email = '{}', last_used = '{}', alias = '{}' WHERE code = '{}'" \
-          "".format(nfc_code["email"], nfc_code["last_used"], nfc_code["alias"], code)
-
-    try:
-        db_cursor.execute(sql)
-        connection.commit()
-    except Exception as exc:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR updating nfc code in db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
-
-
-def add_nfc_code(connection, db_cursor, timestamp: str, code: str):
-    sql = f"INSERT INTO nfc_codes (code, created_at) VALUES ('{code}', '{timestamp}')"
-
-    try:
-        db_cursor.execute(sql)
-        connection.commit()
-    except Exception as exc:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR adding nfc code to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
-
-
 def cleanup_expired_links(connection, db_cursor):
     sql = f"DELETE FROM guests WHERE valid_until < (NOW() - INTERVAL 1 DAY)"
     try:
@@ -343,13 +259,3 @@ def cleanup_expired_links(connection, db_cursor):
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print("ERROR removing guest links from db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
-
-
-def cleanup_unused_nfc_codes(connection, db_cursor):
-    sql = f"DELETE FROM nfc_codes WHERE last_used < (NOW() - INTERVAL 6 MONTH)"
-    try:
-        db_cursor.execute(sql)
-        connection.commit()
-    except Exception as exc:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR removing nfc codes from db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
