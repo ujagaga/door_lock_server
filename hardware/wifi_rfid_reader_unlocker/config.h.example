@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define CODE_CACHE_SIZE         (100)   /* Storage space for detected RFID and NFC codes. */
+#define CODE_CACHE_SIZE         (300)   /* Storage space for detected RFID and NFC codes. */
 #define CODE_LENGTH             (16)    /* Each code is 20 bytes long, but we are saving only the last 16 bytes for security reasons. */
 
 #define AP_PASS                 "Your_s@fe_Passw0rd"
@@ -15,10 +15,13 @@ The device fails to create an AP if total AP name is longer than 31 character. *
 #define LED_PIN                 (2) /* D4 */ 
 #define UNLOCK_DURATION         (7)
 
-#define RFID_RX_PIN             (5) /* D1 */
-#define HASH_SALT               "SomeR@ndomStr1ng"
-#define BEEP_TIMEOUT            (500)
-#define BEEPER_PIN              (4)
+#define RFID_RX_PIN             (4) /* D2 */
 
+
+#define BEEPER_PIN              (5)
+#define BEEP_TIMEOUT            (200)
+#define TIME_TO_UNLOCK          (5000)
+
+#define MAX_AP_TIME             (5 * 60 * 1000)
 
 #endif

@@ -4,6 +4,6 @@
 extern void PINCTRL_trigger(void);
 extern void PINCTRL_init(void);
 extern void PINCTRL_process(void);
-extern void PINCTRL_beep(void);
+extern void PINCTRL_beep(bool rising);
 
 #endif

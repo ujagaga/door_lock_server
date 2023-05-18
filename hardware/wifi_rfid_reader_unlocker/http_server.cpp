@@ -27,20 +27,24 @@ static const char HTML_BEGIN[] PROGMEM = R"(
   .container{width: 100%;}.center_div{margin:0 auto; max-width: 400px;position:relative;}
   .button{width:200px; padding:5px; border-radius:5px; background-color: orange; text-decoration: none;
   text-align: center; margin: 10px auto;}
-  .button a{text-decoration: none; color:white;}
+  .button a{text-decoration: none; color:white;display:block;}
 </style>
 </head>
 <body>
 <div class="container">
 <div class="center_div">
 <h1>RFID Lock</h1>
-<p>
+)";
+
+static const char HTML_SAVE_BUTTON[] PROGMEM = R"(
+<p class="button"><a href="/save_code">Save</a></p>
+)";
+
+static const char HTML_CLEAR_BUTTON[] PROGMEM = R"(
+<p class="button"><a href="/clear_codes">Clear All Codes</a></p>
 )";
 
 static const char HTML_END[] PROGMEM = R"(
-</p>
-<p class="button"><a href="/save_code">Save</a></p>
-<p class="button"><a href="/clear_codes">Clear all codes</a></p>
 </div>
 </div>
 </body>
@@ -59,7 +63,18 @@ static void showNotFound(void){
 
 static void showHome(void){
   String response = FPSTR(HTML_BEGIN);
-  response += RFID_getUnsavedCode();
+
+  String unsaved_code = RFID_getUnsavedCode();
+
+  if(unsaved_code.length() > 10){
+    response += unsaved_code;
+    response += FPSTR(HTML_SAVE_BUTTON);
+  }
+
+  if(!RFID_isEepromClear()){
+    response += FPSTR(HTML_CLEAR_BUTTON);
+  }
+  
   response += FPSTR(HTML_END);
   webServer.send(200, "text/html", response);   
 }

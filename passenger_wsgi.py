@@ -74,9 +74,6 @@ def teardown_request(exception):
     if hasattr(g, 'connection'):
         database.close_db(g.connection, g.db_cursor)
 
-    if hasattr(g, 'unlock'):
-        perform_unlock()
-
 
 @application.route('/logout')
 def logout():
