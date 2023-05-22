@@ -31,6 +31,8 @@ void process_beep(){
 
 
 void PINCTRL_beep(bool rising){
+  // Serial.println("Sound: " + String(rising));
+
   if(beepTime == 0){
     beepTime = millis();
     beepRise = rising;

@@ -38,7 +38,7 @@ static void setLastSavedCodeLocation(){
     }
 
     if(last_code_addr != 0){
-
+      break;
     }
   }
   EEPROM.end();
@@ -67,8 +67,8 @@ static bool checkCodeSaved(){
 }
 
 
-bool RFID_isEepromClear(void){
-  return last_code_addr == 0;
+int RFID_getNumberOfSavedCodes(void){
+  return last_code_addr;
 }
 
 
@@ -86,10 +86,10 @@ void RFID_saveLastCode(){
       EEPROM.begin(EEPROM_SIZE);
 
       for(int i = 0; i < CODE_LENGTH; ++i){
-        int addr = last_code_addr + i;
-        EEPROM.write(addr, card_id[i]); 
-      }       
-
+        int addr = (last_code_addr * CODE_LENGTH) + i;
+        EEPROM.write(addr, card_id[i]);         
+      }
+      EEPROM.commit();
       EEPROM.end();
       last_code_addr++;   
       Serial.println("Saved code.");   

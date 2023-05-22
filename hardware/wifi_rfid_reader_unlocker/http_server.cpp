@@ -65,13 +65,15 @@ static void showHome(void){
   String response = FPSTR(HTML_BEGIN);
 
   String unsaved_code = RFID_getUnsavedCode();
+  int numOfSaved = RFID_getNumberOfSavedCodes();
 
   if(unsaved_code.length() > 10){
     response += unsaved_code;
     response += FPSTR(HTML_SAVE_BUTTON);
   }
 
-  if(!RFID_isEepromClear()){
+  if(numOfSaved > 0){
+    response += "<hr><p>Number of saved codes: " + String(numOfSaved) + "</p>";
     response += FPSTR(HTML_CLEAR_BUTTON);
   }
   
