@@ -210,11 +210,13 @@ def device_ping():
                     mqtt_connect()
 
                     for item in devices:
-                        device_data = json.loads(item["data"])
-                        topic = device_data["topic"]
-                        lifesign = device_data["lifesign"]
+                        item_data = device.get("data")
+                        if item_data:
+                            device_data = json.loads(item_data)
+                            topic = device_data["topic"]
+                            lifesign = device_data["lifesign"]
 
-                        mqtt_publish(topic=topic, data=lifesign)
+                            mqtt_publish(topic=topic, data=lifesign)
 
                     mqtt_disconnect()
 
