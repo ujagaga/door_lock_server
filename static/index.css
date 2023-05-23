@@ -16,10 +16,19 @@ body{
 .container{
     position: relative;
     margin: 0 auto;
-    padding: 0;
     text-align: center;
     max-width: 660px;
-    min-height: 100vh;
+    padding: 0 0 5em 0;
+    min-height: calc(100vh - 5em);
+}
+
+.footer{
+    background-color: #e7d7c3;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    text-align: center;
 }
 
 .big_btn{
@@ -136,10 +145,6 @@ td p{
 .id_codes td:nth-child(3), .id_codes th:nth-child(3) {
     text-align: left;
     width: 2em;
-}
-
-.to-bottom{
-    background-color: #e7d7c3;
 }
 
 h1{

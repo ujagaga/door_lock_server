@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="static/index.css"/>
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="main_content">
         <h1>Veselina Masleše 120</h1>
 
         {% with messages = get_flashed_messages() %}
@@ -80,35 +80,34 @@
             </table>
             {% endif %}
         </div>
+    </div>
+    <div class="footer">
+        {% if attachments %}
+            {% for attachment in attachments %}
+            <a href="static/attachments/{{ attachment }}" target="_blank">{{ attachment }}</a></br>
+            {% endfor %}
+        {% endif %}
 
- 	    <div class="inner_container to-bottom">
-            {% if attachments %}
-                {% for attachment in attachments %}
-                <a href="static/attachments/{{ attachment }}" target="_blank">{{ attachment }}</a></br>
-                {% endfor %}
-            {% endif %}
+        <p>Za sva pitanja kontaktirajte <a href="mailto:ujagaga@gmail.com">administratora</a>.</p>
 
-            <p>Za sva pitanja kontaktirajte <a href="mailto:ujagaga@gmail.com">administratora</a>.</p>
-
-            {% if connected_devices %}
-            <table>
-                {% for device in connected_devices %}
-                    <tr>
-                        <td>
-                            {{ device.name }}
-                        </td>
-                        <td>
-                            {% if device.connected %}
-                            <p class="semaphore green"></p>
-                            {% else %}
-                            <p class="semaphore red"></p>
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </table>
-            {% endif %}
-        </div>
+        {% if connected_devices %}
+        <table>
+            {% for device in connected_devices %}
+                <tr>
+                    <td>
+                        {{ device.name }}
+                    </td>
+                    <td>
+                        {% if device.connected %}
+                        <p class="semaphore green"></p>
+                        {% else %}
+                        <p class="semaphore red"></p>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
     </div>
 </body>
 <script src="static/index.js"></script>
