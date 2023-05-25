@@ -23,13 +23,7 @@
         {% endwith %}
         <a href="/unlock?token={{ token }}" class="big_btn">Otključaj</a>
         <hr>
-        <form class="inner_container" method="POST" action="/get_temporary_unlock_link">
-            <button class="small_btn">Generiši privremeni link</button>
-            <label for="valid_until">Važi do:</label>
-            <input type="date" id="valid_until" name="valid_until"
-                   value="{{ end_date }}"
-                   min="{{ start_date }}">
-        </form>
+        <button class="small_btn" onclick="show_date_choice();">Generiši privremeni link</button>
 
         <div class="inner_container">
             {% if guest_links %}
@@ -108,6 +102,18 @@
             {% endfor %}
         </table>
         {% endif %}
+    </div>
+    <div class="modal" id="date_choice">
+        <button class="small_close_btn" onclick="close_date_choice();">X</button>
+        <div class="modal_background"></div>
+        <div class="modal_container">
+
+            <form class="inner_container" method="POST" action="/get_temporary_unlock_link">
+                <label for="valid_until">Važi do datuma:</label><br>
+                <input type="date" id="valid_until" name="valid_until" value="{{ end_date }}" min="{{ start_date }}"><br><br>
+                <button class="small_btn" type="submit">Primeni</button>
+            </form>
+        </div>
     </div>
 </body>
 <script src="static/index.js"></script>
