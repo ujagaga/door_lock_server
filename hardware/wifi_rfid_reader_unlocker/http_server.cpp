@@ -95,6 +95,10 @@ static void saveLastCode(void){
   webServer.send( 302, "text/plain", "");  
 }
 
+static void showSaved(void){
+  CM_showSaved();
+  webServer.send(200, "text/html", "Sending saved codes via Serial port.");   
+}
 
 void HTTPS_process(void){
   webServer.handleClient(); 
@@ -105,6 +109,7 @@ void HTTPS_init(void){
   webServer.on("/", showHome);
   webServer.on("/clear_codes", clearCodes);
   webServer.on("/save_code", saveLastCode);
+  webServer.on("/log", showSaved);
   webServer.on("/favicon.ico", showNotFound);  
   webServer.onNotFound(showNotFound);
   

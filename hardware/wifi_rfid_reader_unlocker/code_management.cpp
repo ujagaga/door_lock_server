@@ -5,9 +5,11 @@
 
 
 #define EEPROM_SIZE   (CODE_CACHE_SIZE * CODE_LENGTH)
+#define CODE_PRINT_DEBOUNCE_TIME  (5000)
 
 String latest_code = "";
 int last_code_addr = 0;
+uint32_t dump_codes_timestamp = 0;
 
 bool CM_checkCodeSaved(){
   bool code_found_flag = false;
@@ -29,6 +31,30 @@ bool CM_checkCodeSaved(){
 
   return code_found_flag;
 }
+
+void CM_showSaved(){
+  if((millis() - dump_codes_timestamp) < CODE_PRINT_DEBOUNCE_TIME){
+    return;
+  }
+  
+  dump_codes_timestamp = millis();
+
+  EEPROM.begin(EEPROM_SIZE);
+
+  Serial.println("Saved codes:");
+
+  for(int c = 0; c < last_code_addr; ++c){
+    String read_code = "";
+    for(int i = 0; i < CODE_LENGTH; ++i){
+      int addr = c * CODE_LENGTH + i;
+      read_code += char(EEPROM.read(addr));      
+    }
+
+    Serial.println(read_code);
+  }
+  EEPROM.end();
+}
+
 
 
 int CM_getNumberOfSavedCodes(void){

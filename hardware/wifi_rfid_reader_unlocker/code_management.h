@@ -8,5 +8,6 @@ extern void CM_clearCodes(void);
 extern String CM_getUnsavedCode(void);
 extern int CM_getNumberOfSavedCodes(void);
 extern bool CM_checkCodeSaved(void);
+extern void CM_showSaved(void);
 
 #endif
