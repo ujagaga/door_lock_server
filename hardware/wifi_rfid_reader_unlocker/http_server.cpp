@@ -12,7 +12,7 @@
 #include "http_server.h"
 #include "wifi_connection.h"
 #include "config.h"
-#include "rfid_reader.h"
+#include "code_management.h"
 
 
 static const char HTML_BEGIN[] PROGMEM = R"(
@@ -64,8 +64,8 @@ static void showNotFound(void){
 static void showHome(void){
   String response = FPSTR(HTML_BEGIN);
 
-  String unsaved_code = RFID_getUnsavedCode();
-  int numOfSaved = RFID_getNumberOfSavedCodes();
+  String unsaved_code = CM_getUnsavedCode();
+  int numOfSaved = CM_getNumberOfSavedCodes();
 
   if(unsaved_code.length() > 10){
     response += unsaved_code;
@@ -83,14 +83,14 @@ static void showHome(void){
 
 
 static void clearCodes(void){
-  RFID_clearCodes();
+  CM_clearCodes();
   webServer.sendHeader("Location", String("/?timestamp=" + String(millis())), true);
   webServer.send( 302, "text/plain", "");  
 }
 
 
 static void saveLastCode(void){
-  RFID_saveLastCode();
+  CM_saveLatestCode();
   webServer.sendHeader("Location", String("/?timestamp=" + String(millis())), true);
   webServer.send( 302, "text/plain", "");  
 }

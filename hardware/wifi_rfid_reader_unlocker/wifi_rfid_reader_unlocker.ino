@@ -11,6 +11,8 @@
 #include "config.h"
 #include "pinctrl.h"
 #include "rfid_reader.h"
+#include "code_management.h"
+#include "nfc_reader.h"
 
 
 static String statusMessage = "";         /* This is set and requested from other modules. */
@@ -32,7 +34,9 @@ void setup(void) {
   PINCTRL_init();  
   WIFIC_init();
   HTTPS_init();
+  CM_init();
   RFID_init();
+  NFC_init();
 }
 
 
@@ -40,5 +44,6 @@ void loop(void) {
   HTTPS_process();  
   PINCTRL_process();
   RFID_process();
+  NFC_process();
   WIFIC_process();
 }
