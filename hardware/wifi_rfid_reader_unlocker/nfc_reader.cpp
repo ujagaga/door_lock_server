@@ -10,7 +10,8 @@ MFRC522 rfid(NFC_SS_PIN, NFC_RST_PIN);
 MFRC522::MIFARE_Key key;
 
 byte nuidPICC[4];
-
+static uint32_t detect_timestamp = 0;
+static bool card_detected_flag = false;
 
 String byteIdToString(){
   String result = "";
@@ -46,6 +47,8 @@ void NFC_init(void)
 
 void NFC_process(){
   if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial()){
+    detect_timestamp = millis(); 
+
     MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
 
     if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI && piccType != MFRC522::PICC_TYPE_MIFARE_1K && piccType != MFRC522::PICC_TYPE_MIFARE_4K) {
@@ -74,6 +77,10 @@ void NFC_process(){
     rfid.PCD_StopCrypto1();
   }
   
+  if((millis() - detect_timestamp) > 1000){
+    nuidPICC[0] = 0;
+    nuidPICC[3] = 0;
+  }
 }
 
 
