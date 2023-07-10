@@ -299,8 +299,10 @@ def index():
 
     if user["role"] == Role.ADMIN.value:
         pending_users = database.get_user(g.connection, g.db_cursor, role=Role.PENDING.value)
+        email_list_link = "/get_mails"
     else:
         pending_users = None
+        email_list_link = None
 
     return render_template(
         'index.html',
@@ -312,7 +314,8 @@ def index():
         nfc_codes=assigned_nfc_codes,
         new_code=unassigned_nfc_code,
         attachments=attachments,
-        pending_users=pending_users
+        pending_users=pending_users,
+        email_list_link=email_list_link
     )
 
 
@@ -512,12 +515,14 @@ def get_mail_list():
     if not user:
         return redirect(url_for('login'))
 
-    if user["role"] != Role.ADMIN.value:
+    if user["role"] == Role.ADMIN.value:
         user_emails = database.get_user_emails(g.connection, g.db_cursor)
     else:
         user_emails = []
 
-    result = "List of user e-mails:\n"
+    result = "List of user e-mails:"
     for email in user_emails:
         if email != user["email"]:
-            result += email + ", "
+            result = f"{result} {email}, "
+
+    return result

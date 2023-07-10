@@ -13,6 +13,9 @@
 <body>
     <div class="container" id="main_content">
         <h1>Veselina Masleše 120</h1>
+        {% if email_list_link %}
+        <a href="{{email_list_link}}" target="_blank">Lista svih e-mail-ova</a>
+        {% endif %}
 
         {% with messages = get_flashed_messages() %}
         {% if messages %}
