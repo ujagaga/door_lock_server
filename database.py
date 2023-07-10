@@ -99,6 +99,23 @@ def get_user(connection, db_cursor, email: str = None, token: str = None, role: 
     return user
 
 
+def get_user_emails(connection, db_cursor):
+    sql = f"SELECT email FROM users"
+    email_list = []
+    try:
+        db_cursor.execute(sql)
+        email_list = db_cursor.fetchall()
+
+        # raw_data = db_cursor.fetchall()
+        # for data in raw_data:
+        #     email_list.append(data[0])
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print(f"ERROR reading data on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
+
+    return email_list
+
+
 def update_user(connection, db_cursor, email: str, token: str = None, password: str = None, role: str = None):
     user = get_user(connection, db_cursor, email=email)
 

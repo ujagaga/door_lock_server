@@ -500,3 +500,24 @@ def approve_user():
         flash(f'Greška: nepostojeći email {pending_user_email}.')
 
     return redirect(url_for('index'))
+
+
+@application.route('/get_mails', methods=['GET'])
+def get_mail_list():
+    token = request.cookies.get('token')
+    if not token:
+        return redirect(url_for('login'))
+
+    user = database.get_user(g.connection, g.db_cursor, token=token)
+    if not user:
+        return redirect(url_for('login'))
+
+    if user["role"] != Role.ADMIN.value:
+        user_emails = database.get_user_emails(g.connection, g.db_cursor)
+    else:
+        user_emails = []
+
+    result = "List of user e-mails:\n"
+    for email in user_emails:
+        if email != user["email"]:
+            result += email + ", "
