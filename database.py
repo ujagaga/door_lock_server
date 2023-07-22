@@ -22,7 +22,7 @@ def close_db(connection, db_cursor):
 def init_database(connection, db_cursor):
     print("Creating tables...")
 
-    sql = "create table users (email varchar(255) NOT NULL UNIQUE, password varchar(255) NOT NULL, token varchar(32) UNIQUE, role varchar(16), details varchar(512))"
+    sql = "create table users (email varchar(255) NOT NULL UNIQUE, password varchar(255) NOT NULL, token varchar(64) UNIQUE, role varchar(16), details varchar(512))"
     db_cursor.execute(sql)
 
     sql = "create table devices (name varchar(255) NOT NULL UNIQUE, password varchar(255) NOT NULL, data varchar(512), token varchar(32) UNIQUE)"

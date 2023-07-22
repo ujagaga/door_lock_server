@@ -276,9 +276,6 @@ def index():
 
     guest_links = database.get_guest(g.connection, g.db_cursor, email=user["email"])
 
-    assigned_nfc_codes = database.get_nfc_codes(g.connection, g.db_cursor, email=user["email"])
-    unassigned_nfc_code = database.get_nfc_codes(g.connection, g.db_cursor)
-
     start_date = helper.date_to_string(datetime.now())
     end_date = helper.date_to_string(datetime.now() + timedelta(days=7))
 
@@ -311,8 +308,6 @@ def index():
         start_date=start_date,
         end_date=end_date,
         connected_devices=connected_devices,
-        nfc_codes=assigned_nfc_codes,
-        new_code=unassigned_nfc_code,
         attachments=attachments,
         pending_users=pending_users,
         email_list_link=email_list_link
