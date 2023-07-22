@@ -49,6 +49,20 @@ def mqtt_publish(topic: str, data: str):
     publish_result.wait_for_publish()
 
 
+def perform_unlock():
+    devices = database.get_device(g.connection, g.db_cursor)
+    if devices:
+        mqtt_connect()
+        for device in devices:
+            if device["data"]:
+                device_data = json.loads(device["data"])
+                topic = device_data.get("topic", "")
+                trigger = device_data.get("trigger", "")
+
+                mqtt_publish(topic=topic, data=trigger)
+        mqtt_disconnect()
+
+
 @application.before_request
 def before_request():
     g.connection, g.db_cursor = database.open_db()
@@ -65,7 +79,7 @@ def logout():
     token = request.cookies.get('token')
     user = database.get_user(g.connection, g.db_cursor, token=token)
     if user:
-        database.update_user(g.connection, g.db_cursor, email=user["email"], token="")
+        database.update_user(g.connection, g.db_cursor, email=user["email"], token="INVALID")
 
     return redirect(url_for('index'))
 
@@ -90,7 +104,7 @@ def login_post():
         flash('Neispravno korisničko ime ili lozinka.')
         return redirect(url_for('login'))
 
-    token = helper.generate_token()
+    token = helper.generate_random_string()
     database.update_user(g.connection, g.db_cursor, email=email, token=token)
 
     response = make_response(redirect(url_for('index')))
@@ -112,7 +126,7 @@ def device_login():
             if encrypted_pass != device["password"]:
                 response = {"status": "ERROR", "detail": "Bad password or name"}
             else:
-                token = helper.generate_token()
+                token = helper.generate_random_string()
                 topic = helper.generate_random_string()
                 life_sign = helper.generate_random_string()
                 trigger = helper.generate_random_string()
@@ -157,11 +171,13 @@ def device_ping():
                     mqtt_connect()
 
                     for item in devices:
-                        device_data = json.loads(item["data"])
-                        topic = device_data["topic"]
-                        lifesign = device_data["lifesign"]
+                        item_data = device.get("data")
+                        if item_data:
+                            device_data = json.loads(item_data)
+                            topic = device_data["topic"]
+                            lifesign = device_data["lifesign"]
 
-                        mqtt_publish(topic=topic, data=lifesign)
+                            mqtt_publish(topic=topic, data=lifesign)
 
                     mqtt_disconnect()
 
@@ -171,7 +187,7 @@ def device_ping():
                 print(f"ERROR: parsing device on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
                 response = {"status": "ERROR", "detail": "JSON parsing error"}
         else:
-            response = {"status": "ERROR", "detail": "Unauthorized"}
+            response = {"status": "ERROR", "detail": "forbidden"}
     else:
         response = {"status": "ERROR", "detail": "Missing token"}
 
@@ -200,7 +216,7 @@ def device_lifesign_confirm():
                 print(f"ERROR: parsing device on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
                 response = {"status": "ERROR", "detail": "JSON parsing error"}
         else:
-            response = {"status": "ERROR", "detail": "Unauthorized"}
+            response = {"status": "ERROR", "detail": "forbidden"}
     else:
         response = {"status": "ERROR", "detail": "Missing token"}
 
@@ -220,6 +236,7 @@ def index():
     database.cleanup_expired_links(g.connection, g.db_cursor)
 
     guest_links = database.get_guest(g.connection, g.db_cursor, email=user["email"])
+
     start_date = helper.date_to_string(datetime.now())
     end_date = helper.date_to_string(datetime.now() + timedelta(days=7))
 
@@ -238,6 +255,7 @@ def index():
 
     return render_template(
         'index.html',
+        token=token,
         guest_links=guest_links,
         start_date=start_date,
         end_date=end_date,
@@ -251,7 +269,7 @@ def unlock():
     token = args.get("token")
 
     if token:
-        # Unlocking using temporary link
+        # Unlocking using token from url
         guest = database.get_guest(g.connection, g.db_cursor, token=token)
         if guest:
             valid_until = helper.string_to_date(guest["valid_until"])
@@ -260,7 +278,9 @@ def unlock():
             if valid_until < today:
                 return render_template('token_expired.html')
         else:
-            return render_template('token_expired.html')
+            user = database.get_user(g.connection, g.db_cursor, token=token)
+            if not user:
+                return render_template('token_expired.html')
     else:
         # Unlocking using normal user link
         token = request.cookies.get('token')
@@ -272,17 +292,7 @@ def unlock():
     if not token:
         abort(404)
 
-    devices = database.get_device(g.connection, g.db_cursor)
-    if devices:
-        mqtt_connect()
-        for device in devices:
-            if device["data"]:
-                device_data = json.loads(device["data"])
-                topic = device_data.get("topic", "")
-                trigger = device_data.get("trigger", "")
-
-                mqtt_publish(topic=topic, data=trigger)
-        mqtt_disconnect()
+    perform_unlock()
 
     return render_template('unlock.html')
 
@@ -299,7 +309,7 @@ def reset_password_post():
 
     flash('Ako je priložena e-mail adresa u našoj bazi, poslaćemo Vam e-mail sa linkom za reset.')
     if user:
-        token = helper.generate_token()
+        token = helper.generate_random_string()
         database.update_user(g.connection, g.db_cursor, email=email, token=token)
 
         base_url = request.base_url.replace("reset_password", "set_password")
@@ -375,7 +385,7 @@ def get_temporary_unlock_link():
         valid_date = datetime.now() + timedelta(days=7)
         valid_until = helper.date_to_string(valid_date)
 
-    token = helper.generate_token()
+    token = helper.generate_random_string()
     database.add_guest(g.connection, g.db_cursor, email=user["email"], token=token, valid_until=valid_until)
 
     return redirect(url_for('index'))

@@ -4,13 +4,9 @@ from hashlib import sha256
 import re
 from datetime import datetime
 import sys
-
+import time
 
 DATE_FORMAT = "%Y-%m-%d"
-
-
-def generate_token():
-    return ''.join(random.choices(string.ascii_letters, k=32))
 
 
 def hash_password(password: str):
@@ -18,7 +14,8 @@ def hash_password(password: str):
 
 
 def generate_random_string():
-    return hash_password(generate_token())
+    salt = f"{int(time.time())}"
+    return hash_password(salt.join(random.choices(string.ascii_letters, k=32)))
 
 
 def validate_email(email: str):

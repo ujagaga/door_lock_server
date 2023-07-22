@@ -22,7 +22,7 @@ def close_db(connection, db_cursor):
 def init_database(connection, db_cursor):
     print("Creating tables...")
 
-    sql = "create table users (email varchar(255) NOT NULL UNIQUE, password varchar(255) NOT NULL, token varchar(32) UNIQUE)"
+    sql = "create table users (email varchar(255) NOT NULL UNIQUE, password varchar(255) NOT NULL, token varchar(64) UNIQUE)"
     db_cursor.execute(sql)
 
     sql = "create table devices (name varchar(255) NOT NULL UNIQUE, password varchar(255) NOT NULL, data varchar(512), token varchar(32) UNIQUE)"
@@ -79,11 +79,16 @@ def get_user(connection, db_cursor, email: str = None, token: str = None):
         db_cursor.execute(sql)
         if one:
             data = db_cursor.fetchone()
-            user = {"email": data[0], "password": data[1], "token": data[2]}
+            if data:
+                user = {"email": data[0], "password": data[1], "token": data[2]}
+            else:
+                user = None
         else:
             user = []
-            for data in db_cursor.fetchall():
-                user.append({"email": data[0], "password": data[1], "token": data[2]})
+            raw_data = db_cursor.fetchall()
+            if raw_data:
+                for data in raw_data:
+                    user.append({"email": data[0], "password": data[1], "token": data[2], "role": data[3]})
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print(f"ERROR reading data on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
@@ -96,7 +101,7 @@ def update_user(connection, db_cursor, email: str, token: str = None, password: 
     user = get_user(connection, db_cursor, email=email)
 
     if user:
-        if token is not None:
+        if token:
             user["token"] = token
         if password:
             user["password"] = password
@@ -154,8 +159,10 @@ def get_device(connection, db_cursor, name: str = None, token: str = None):
                 device = None
         else:
             device = []
-            for data in db_cursor.fetchall():
-                device.append({"name": data[0], "password": data[1], "data": data[2], "token": data[3]})
+            raw_data = db_cursor.fetchall()
+            if raw_data:
+                for data in raw_data:
+                    device.append({"name": data[0], "password": data[1], "data": data[2], "token": data[3]})
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print(f"ERROR reading data on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
@@ -222,11 +229,16 @@ def get_guest(connection, db_cursor, token: str = None, email: str = None):
         db_cursor.execute(sql)
         if one:
             data = db_cursor.fetchone()
-            guest = {"email": data[0], "token": data[1], "valid_until": data[2]}
+            if data:
+                guest = {"email": data[0], "token": data[1], "valid_until": data[2]}
+            else:
+                guest = None
         else:
             guest = []
-            for data in db_cursor.fetchall():
-                guest.append({"email": data[0], "token": data[1], "valid_until": data[2]})
+            raw_data = db_cursor.fetchall()
+            if raw_data:
+                for data in raw_data:
+                    guest.append({"email": data[0], "token": data[1], "valid_until": data[2]})
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print(f"ERROR reading data on line {exc_tb.tb_lineno}!\n\t{exc}", flush=True)
@@ -235,7 +247,7 @@ def get_guest(connection, db_cursor, token: str = None, email: str = None):
     return guest
 
 
-def cleanup_expired_links(connection, db_cursor, ):
+def cleanup_expired_links(connection, db_cursor):
     sql = f"DELETE FROM guests WHERE valid_until < (NOW() - INTERVAL 1 DAY)"
     try:
         db_cursor.execute(sql)
