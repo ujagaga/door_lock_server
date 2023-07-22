@@ -109,7 +109,7 @@ def login_post():
         flash('Neispravno korisničko ime ili lozinka.')
         return redirect(url_for('login'))
 
-    token = helper.generate_token()
+    token = helper.generate_random_string()
     database.update_user(g.connection, g.db_cursor, email=email, token=token)
 
     response = make_response(redirect(url_for('index')))
@@ -165,7 +165,7 @@ def device_login():
             if encrypted_pass != device["password"]:
                 response = {"status": "ERROR", "detail": "Bad password or name"}
             else:
-                token = helper.generate_token()
+                token = helper.generate_random_string()
                 topic = helper.generate_random_string()
                 life_sign = helper.generate_random_string()
                 trigger = helper.generate_random_string()
@@ -365,7 +365,7 @@ def reset_password_post():
 
     flash('Ako je priložena e-mail adresa u našoj bazi, poslaćemo Vam e-mail sa linkom za reset.')
     if user:
-        token = helper.generate_token()
+        token = helper.generate_random_string()
         database.update_user(g.connection, g.db_cursor, email=email, token=token)
 
         base_url = request.base_url.replace("reset_password", "set_password")
@@ -441,7 +441,7 @@ def get_temporary_unlock_link():
         valid_date = datetime.now() + timedelta(days=7)
         valid_until = helper.date_to_string(valid_date)
 
-    token = helper.generate_token()
+    token = helper.generate_random_string()
     database.add_guest(g.connection, g.db_cursor, email=user["email"], token=token, valid_until=valid_until)
 
     return redirect(url_for('index'))
@@ -481,7 +481,7 @@ def approve_user():
     if pending_user:
         if pending_user["role"] == Role.PENDING.value:
 
-            token = helper.generate_token()
+            token = helper.generate_random_string()
             database.update_user(g.connection, g.db_cursor, email=pending_user_email, role=Role.ACTIVE.value, token=token)
 
             base_url = request.base_url.replace("approve_user", "set_password")
