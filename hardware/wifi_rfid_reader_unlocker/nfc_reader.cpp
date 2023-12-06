@@ -24,7 +24,7 @@ String byteIdToString(){
     hexstring += String(nuidPICC[i], HEX);
   }
 
-  // Serial.println(hexstring);
+  Serial.println(hexstring);
 
   return hexstring;
 }
