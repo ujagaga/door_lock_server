@@ -5,12 +5,14 @@
 #include "wifi_connection.h"
 #include "code_management.h"
 
+#define REINIT_TIMEOUT  (6*60*60*1000)
 
 MFRC522 rfid(NFC_SS_PIN, NFC_RST_PIN);
 MFRC522::MIFARE_Key key;
 
 byte nuidPICC[4];
 static uint32_t detect_timestamp = 0;
+static uint32_t init_timestamp = 0;
 
 String byteIdToString(){
   String result = "";
@@ -41,6 +43,8 @@ void NFC_init(void)
   Serial.println();
   Serial.print(F("NFC Reader :"));
   rfid.PCD_DumpVersionToSerial();
+
+  init_timestamp = millis();
 }
 
 void NFC_process(){
@@ -79,7 +83,11 @@ void NFC_process(){
   if((millis() - detect_timestamp) > 1000){
     nuidPICC[0] = 0;
     nuidPICC[3] = 0;
-  }
+
+    if((millis() - init_timestamp) > REINIT_TIMEOUT){
+      NFC_init();
+    }
+  }   
 }
 
 
