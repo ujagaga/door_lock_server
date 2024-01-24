@@ -85,7 +85,8 @@ void NFC_process(){
     nuidPICC[3] = 0;
 
     if((millis() - init_timestamp) > REINIT_TIMEOUT){
-      NFC_init();
+      //NFC_init();
+      ESP.restart();
     }
   }   
 }
